@@ -11,11 +11,11 @@ Building from source
 
 Scala 2.9.x, JDK 1.6 and Ant need to be installed: 
 
-  apt-get install scala ant
+    apt-get install scala ant
 
 To build the project, run:
 
-  ./make
+    ./make
 
 This `make` script will run three steps:
 
@@ -32,25 +32,25 @@ Two instances of the software need to be run in parallel, either on separate mac
 
 RelayBase
 
-  ./run timur.p2pCore.RelayBase
+    ./run timur.p2pCore.RelayBase
   
 RelayBase can be executed without parameters. RelayBase implements two methods and has only a dozen lines of code. Method 1: `connectedThread()` is called when a p2p connection via relay server has been established. All we do here is call `send("data")`. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", we quit the application. This is what is being displayed, when looking at one instance:
 
-  RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771
-  RelayBase receiveHandler send encrypted initialMsg=[...]
-  RelayBase connectedThread send='data'
-  RelayBase connectedThread finished
-  RelayBase receiveMsgHandler 'data'; setting relayQuitFlag
+    RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771
+    RelayBase receiveHandler send encrypted initialMsg=[...]
+    RelayBase connectedThread send='data'
+    RelayBase connectedThread finished
+    RelayBase receiveMsgHandler 'data'; setting relayQuitFlag
 
 RelayStress
 
-  ./run timur.p2pCore.RelayStress
+    ./run timur.p2pCore.RelayStress
 
 (todo:) # sudo sysctl -w net.core.rmem_max=1048576 net.core.rmem_default=1048576
 
 P2pBase
 
-  ./run timur.p2pCore.P2pBase
+    ./run timur.p2pCore.P2pBase
 
 (todo:) 
 
