@@ -30,7 +30,7 @@ A `run` script is used to execture the different functionality. It adds the newl
 
 Two instances of the software need to be run in parallel, either on separate machines or in separate terminals. (Running both instances on the same machine does probably mean they are running in the same network and also behind the same firewall. It is possible to run two instances in this way, but it does obviously defeat the purpose of the project. Ideally you will use two machines running in two different networks, behind different firewalls.)
 
-RelayBase
+# RelayBase
 
     ./run timur.p2pCore.RelayBase
   
@@ -42,36 +42,36 @@ RelayBase can be executed without parameters. RelayBase implements two methods a
     RelayBase connectedThread finished
     RelayBase receiveMsgHandler 'data'; setting relayQuitFlag
 
-RelayStress
+# RelayStress
 
     ./run timur.p2pCore.RelayStress
 
 (todo:) # sudo sysctl -w net.core.rmem_max=1048576 net.core.rmem_default=1048576
 
-P2pBase
+# P2pBase
 
     ./run timur.p2pCore.P2pBase
 
 (todo:) 
 
-P2pBe
+# P2pBench
 
-  ./run timur.p2pCore.P2pBench
+    ./run timur.p2pCore.P2pBench
 
 (todo:) 
 
-P2pEncrypt (key fingerprint matching)
+# P2pEncrypt (key fingerprint matching)
 
-  ./run timur.p2pCore.P2pEncrypt keysAlice bob
-  ./run timur.p2pCore.P2pEncrypt keysBob alice
+    ./run timur.p2pCore.P2pEncrypt keysAlice bob
+    ./run timur.p2pCore.P2pEncrypt keysBob alice
 
 (todo:) # key-folder-path remote-public-key-name
 
 
-P2pEncrypt (Rendesvouz string matching)
+# P2pEncrypt (Rendesvouz string matching)
 
-  ./run timur.p2pCore.P2pEncrypt keysAlice bob rendesvouz
-  ./run timur.p2pCore.P2pEncrypt keysBob alice rendesvouz
+    ./run timur.p2pCore.P2pEncrypt keysAlice bob rendesvouz
+    ./run timur.p2pCore.P2pEncrypt keysBob alice rendesvouz
 
 (todo:) # key-folder-path remote-public-key-name rendevouz-string
 
