@@ -79,29 +79,23 @@ RelayBase can be executed without parameters. RelayBase implements two methods a
 More info
 ---------
 
-### protobuf folder 
+- protobuf folder 
+  (todo:) 
 
-(todo:) 
+- bouncy-jarjar and bcprov-jdk15on-147.jar 
+  (todo:) 
 
-### bouncy-jarjar and bcprov-jdk15on-147.jar 
+- keys* folders 
+  (todo:) 
 
-(todo:) 
+- getjars 
+  (todo:) 
 
-### keys* folders 
+- relaykey.pub 
+  (todo:) 
 
-(todo:) 
-
-### getjars 
-
-(todo:) 
-
-### relaykey.pub 
-
-(todo:) 
-
-### the role of the relayserver 
-
-(todo:) 
+- the role of the relayserver 
+  (todo:) 
 
 
 License
