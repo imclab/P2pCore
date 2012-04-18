@@ -1,0 +1,2 @@
+cd build && jar cf ../p2pCore.jar * && cd ..
+

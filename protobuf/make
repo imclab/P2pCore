@@ -1,0 +1,6 @@
+# this command will generate a file "P2pCore.bin" in the local folder
+./protoc P2pCore.proto -oP2pCore.bin
+
+# this command will generate "../src/timur/p2pCore/P2pCore.java"
+./protoc P2pCore.proto --java_out=../src
+
