@@ -27,8 +27,6 @@ object P2pEncrypt {
 
 class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:String) extends P2pBase {
 
-  appName = "P2pEncrypt"
-
   var privKeyLocal:String = null
   var pubKeyLocal:String = null
   var pubKeyRemote:String = null

@@ -19,10 +19,6 @@ object P2pBench {
 
 class P2pBench extends P2pBase {
 
-  appName = "P2pBench"
-  matchSource = appName  // we can be searched by this
-  matchTarget = appName  // we are searching for this
-
   val dataString = "datadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadata"+
                    "datadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadatadata"
   val sendDataCount = 2000

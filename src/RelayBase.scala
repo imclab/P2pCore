@@ -19,10 +19,6 @@ object RelayBase {
 
 class RelayBase extends RelayTrait {
 
-  appName = "RelayBase"
-  matchSource = appName  // we can be searched by this
-  matchTarget = appName  // what we are searching for
-
   override def connectedThread(connectString:String) {
     val msg = "data"
     log("connectedThread send='"+msg+"'")

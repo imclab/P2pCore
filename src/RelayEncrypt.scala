@@ -19,10 +19,6 @@ object RelayEncrypt {
 
 class RelayEncrypt extends RelayTrait {
 
-  appName = "RelayEncrypt"
-  matchSource = appName
-  matchTarget = appName
-
   val sendDataString = "data"
   var privKey:String = null
   var pubKey:String = null

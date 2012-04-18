@@ -20,9 +20,15 @@ trait RelayTrait {
 
   var relayServer = "109.74.203.226"
   var relayPort = 18771
-  var appName = "RelayTrait"
+
+  var appName = this.getClass.getName
+  if(appName.lastIndexOf('.') > 0)
+    appName = appName.substring(appName.lastIndexOf('.')+1)
+  if(appName.lastIndexOf('$') > 0)
+    appName = appName.substring(appName.lastIndexOf('$')+1)
   var matchSource = appName  // we can be searched by this
   var matchTarget = appName  // what we are searching for
+
   var relaySocket = new Socket()
   var socketOutWriter:BufferedWriter = null
   var socketInReader:BufferedReader = null
@@ -114,7 +120,7 @@ trait RelayTrait {
         randomId = util.Random.nextInt(100000000)
         // consider encrypt string max-size RsaKeyGenerate.keySize; see also: RsaEncrypt.scala
         val initialMsg = "id="+id+"|core="+appName+","+matchSource+","+matchTarget+",true,false,false,-,direct,null,"+randomId
-        log("receiveHandler send encrypted initialMsg='"+initialMsg+"'")
+        log("receiveHandler send encrypted initialMsg='"+initialMsg+"' initialMsg.length="+initialMsg.length)
         val encrypted = RsaEncrypt.encrypt(hostPubKey, initialMsg)
         //log("receiveHandler send encrypted=["+encrypted+"]")
         send(encrypted)

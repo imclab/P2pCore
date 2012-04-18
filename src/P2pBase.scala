@@ -33,10 +33,6 @@ class P2pBase extends RelayTrait {
   var relayBasedP2pCommunication = false
   var waitingRelayThread:Thread = null
 
-  appName = "P2pBase"
-  matchSource = appName
-  matchTarget = appName
-
   override def start() :Int = {
     log("start appName=["+appName+"] matchSource="+matchSource+" matchTarget="+matchTarget+
         " receiveBufferSize="+p2pSocket.getReceiveBufferSize+

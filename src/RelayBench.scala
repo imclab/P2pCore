@@ -22,10 +22,6 @@ class RelayBench extends RelayTrait {
   var incomingDataCounter = 0
   var outgoingDataCounter = 0
 
-  appName = "RelayBench"
-  matchSource = appName  // we can be searched by this
-  matchTarget = appName  // we are searching for this
-
   override def connectedThread(connectString:String) {
     log("connectedThread start connectString='"+connectString+"' relayQuitFlag="+relayQuitFlag)
 

@@ -34,7 +34,6 @@ class RelayEncryptStress(encryptKeyFile:String, decryptKeyFile:String, decryptPu
   var sendDataString = "data"
   var sendEndString = "last"
 
-  appName = "RelayEncryptStress"
   // prepare org.bouncycastle.crypto.encodings.PKCS1Encoding for RsaEncrypt/RsaDecrypt
   Security.addProvider(new ext.org.bouncycastle.jce.provider.BouncyCastleProvider())
 
