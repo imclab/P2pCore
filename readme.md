@@ -30,7 +30,7 @@ A `run` script is used to execture the different functionality. It adds the newl
 
 Two instances of the software need to be run in parallel, either on separate machines or in separate terminals. (Running both instances on the same machine does probably mean they are running in the same network and also behind the same firewall. It is possible to run two instances in this way, but it does obviously defeat the purpose of the project. Ideally you will use two machines running in two different networks, behind different firewalls.)
 
-# RelayBase
+### RelayBase
 
     ./run timur.p2pCore.RelayBase
   
@@ -42,7 +42,7 @@ RelayBase can be executed without parameters. RelayBase implements two methods a
     RelayBase connectedThread finished
     RelayBase receiveMsgHandler 'data'; setting relayQuitFlag
 
-## RelayStress
+### RelayStress
 
     ./run timur.p2pCore.RelayStress
 
@@ -54,13 +54,13 @@ RelayBase can be executed without parameters. RelayBase implements two methods a
 
 (todo:) 
 
-# P2pBench
+### P2pBench
 
     ./run timur.p2pCore.P2pBench
 
 (todo:) 
 
-# P2pEncrypt (key fingerprint matching)
+### P2pEncrypt (key fingerprint matching)
 
     ./run timur.p2pCore.P2pEncrypt keysAlice bob
     ./run timur.p2pCore.P2pEncrypt keysBob alice
@@ -68,7 +68,7 @@ RelayBase can be executed without parameters. RelayBase implements two methods a
 (todo:) # key-folder-path remote-public-key-name
 
 
-# P2pEncrypt (Rendesvouz string matching)
+### P2pEncrypt (Rendesvouz string matching)
 
     ./run timur.p2pCore.P2pEncrypt keysAlice bob rendesvouz
     ./run timur.p2pCore.P2pEncrypt keysBob alice rendesvouz
@@ -79,17 +79,29 @@ RelayBase can be executed without parameters. RelayBase implements two methods a
 More info
 ---------
 
-- protobuf folder (todo:) 
+### protobuf folder 
 
-- bouncy-jarjar and bcprov-jdk15on-147.jar (todo:) 
+(todo:) 
 
-- keys* folders (todo:) 
+### bouncy-jarjar and bcprov-jdk15on-147.jar 
 
-- getjars (todo:) 
+(todo:) 
 
-- relaykey.pub (todo:) 
+### keys* folders 
 
-- the role of the relayserver (todo:) 
+(todo:) 
+
+### getjars 
+
+(todo:) 
+
+### relaykey.pub 
+
+(todo:) 
+
+### the role of the relayserver 
+
+(todo:) 
 
 
 License
