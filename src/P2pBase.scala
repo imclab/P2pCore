@@ -104,6 +104,8 @@ class P2pBase extends RelayTrait {
 
     // first get our own public/external udp-port from relay server's udp echo-service
     p2pSend("hello", relayServer, udpEchoPort)
+    // todo: does this get through in vf network?
+    // compare with http://en.wikipedia.org/wiki/STUN#Classic_STUN_NAT_characterization_algorithm
 
     // start receiving datagram's 
     // the first packet received will be our "publicUdpAddress:port" response from relay server's udp echo-service
@@ -181,6 +183,8 @@ class P2pBase extends RelayTrait {
       val udpAddressString = tokenArrayOfStrings(0)
       if(udpAddressString.length>0) {
         // try to udp-communicate with the other parties external ip:port
+        // todo: implement direct-p2p connect-timeout starting now
+
         udpPunchAttempts +=1
         new Thread("datagramSendPublic") { override def run() {
           val tokenArrayOfStrings2 = udpAddressString split ':'
@@ -218,6 +222,7 @@ class P2pBase extends RelayTrait {
 
       if(udpPunchAttempts==udpPunchFaults) {
         // all datagramSendThread's have failed
+        // todo: this still appears twice (the following if tries to prevent this, but not ideal)
         if(!relayBasedP2pCommunication) {
           p2pReset
           p2pFault(udpPunchAttempts)
@@ -234,7 +239,7 @@ class P2pBase extends RelayTrait {
   }
 
   def p2pFault(attempts:Int) {
-    log("failed to establish direct p2p connection over "+attempts+" separate pathes")
+    log("p2pFault failed to establish direct p2p connection over "+attempts+" separate pathes")
   }
 
   def p2pReset() {
