@@ -62,7 +62,7 @@ trait RelayTrait {
 
       } catch {
         case ex:Exception =>
-          log("relay disconnected")
+          //logEx("relay disconnected")
           if(!relayQuitFlag) {
             ex.printStackTrace
             relayQuitFlag = true
@@ -77,7 +77,7 @@ trait RelayTrait {
 
     } catch {
       case ex:Exception =>
-        log("Exception "+ex)
+        logEx("relayQuit "+ex)
     }
 
     relayExit
@@ -88,6 +88,11 @@ trait RelayTrait {
   def log(str:String) {
     val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)
     println(dateTime+" "+appName+" "+str)
+  }
+
+  def logEx(str:String) {
+    val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)
+    println(dateTime+" "+appName+" exception "+str+" ######")
   }
 
   def send(str:String) {

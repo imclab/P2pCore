@@ -99,11 +99,11 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       messageDigest.reset
       messageDigest.update(Base64.decode(pubKeyRemote))
       matchTarget = RsaEncrypt.getHexString(messageDigest.digest).substring(0,20)
-      return 0
+      //return 0
 
     } catch {
       case ex:Exception =>
-        log("fingerprint setup error ex="+ex)
+        logEx("fingerprint setup error ex="+ex)
         return -1
     }
     return 0
@@ -143,9 +143,18 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       p2pEncryptedCommunication
 
     } else {
-      val decryptString = RsaDecrypt.decrypt(privKeyLocal, str)
-      if(decryptString!=null)
-        p2pReceiveUserData(decryptString)
+      try {
+        // possible exception: ext.org.bouncycastle.crypto.InvalidCipherTextException: unknown block type
+        // possible exception: ext.org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher
+        val decryptString = RsaDecrypt.decrypt(privKeyLocal, str)
+        if(decryptString!=null)
+          p2pReceiveUserData(decryptString)
+      } catch {
+        case ex:Exception =>
+          logEx("p2pReceiveHandler "+ex.getMessage)
+          ex.printStackTrace
+      }
+          
     }
   }
 
@@ -185,7 +194,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
             decryptString = RsaDecrypt.decrypt(privKeyLocal, receivedString)
           } catch {
             case invChioherTextEx:ext.org.bouncycastle.crypto.InvalidCipherTextException =>
-              log("relayReceiveHandler invChioherTextEx="+invChioherTextEx)
+              logEx("relayReceiveHandler invChioherTextEx="+invChioherTextEx)
           }
 
           if(decryptString!=null) {

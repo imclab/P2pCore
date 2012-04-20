@@ -34,9 +34,9 @@ class P2pBase extends RelayTrait {
   var waitingRelayThread:Thread = null
 
   override def start() :Int = {
-    log("start appName=["+appName+"] matchSource="+matchSource+" matchTarget="+matchTarget+
-        " receiveBufferSize="+p2pSocket.getReceiveBufferSize+
-        " sendBufferSize="+p2pSocket.getSendBufferSize)
+    //log("start appName=["+appName+"] matchSource="+matchSource+" matchTarget="+matchTarget+
+    //    " receiveBufferSize="+p2pSocket.getReceiveBufferSize+
+    //    " sendBufferSize="+p2pSocket.getSendBufferSize)
     val ret = super.start
     // in case the relay connection was closed but the udp connection is still in use, we keep the parent alive
     if(udpConnectIpAddr!=null && !p2pQuitFlag) {
@@ -72,13 +72,15 @@ class P2pBase extends RelayTrait {
                               .setMsgString(sendString)
                               .build
       val size = p2pCoreMsg.getSerializedSize
+      //log("p2pSend p2pCoreMsg.getSerializedSize="+size)
       if(size>0) {
         val byteData = p2pCoreMsg.toByteArray
-        //log("p2pSend '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
         if(relayBasedP2pCommunication) {
+          //log("p2pSend relay '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
           send(Base64.encode(byteData))
 
         } else if(host!=null && port!=0) {
+          //log("p2pSend udp '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
           val sendDatagram = new DatagramPacket(byteData, size, new InetSocketAddress(host, port))
           p2pSocket.send(sendDatagram)
         }
@@ -164,7 +166,7 @@ class P2pBase extends RelayTrait {
         }
       } catch {
         case ex:java.lang.Exception =>
-          log("connectedThread ex="+ex.getMessage+" ########")
+          logEx("connectedThread "+ex.getMessage)
           ex.printStackTrace
           p2pQuitFlag=true
       }
@@ -208,7 +210,7 @@ class P2pBase extends RelayTrait {
   }
 
   def datagramSendThread(udpIpAddr:String, udpPortInt:Int) {
-    log("datagramSendThread udpIpAddr=["+udpIpAddr+"] udpPortInt="+udpPortInt)
+    //log("datagramSendThread udpIpAddr=["+udpIpAddr+"] udpPortInt="+udpPortInt)
 
     // punch udp hole
     val startTime = System.currentTimeMillis
@@ -218,7 +220,7 @@ class P2pBase extends RelayTrait {
     }
     if(udpConnectIpAddr!=udpIpAddr || udpConnectPortInt!=udpPortInt) {
       udpPunchFaults +=1
-      log("datagramSendThread udpIpAddr=["+udpIpAddr+"] udpPortInt="+udpPortInt+" abort udpPunchFaults="+udpPunchFaults+" udpPunchAttempts="+udpPunchAttempts)
+      log("datagramSendThread udpIpAddr=["+udpIpAddr+"] udpPortInt="+udpPortInt+" abort")
 
       if(udpPunchAttempts==udpPunchFaults) {
         // all datagramSendThread's have failed
@@ -249,16 +251,17 @@ class P2pBase extends RelayTrait {
   }
 
   def p2pQuit() {
-    log("p2pQuit")
+    //log("p2pQuit")
     if(waitingRelayThread!=null)
       waitingRelayThread.interrupt
     try {
       p2pSend("quit", udpConnectIpAddr,udpConnectPortInt)
     } catch {
       case ex:Exception =>
-        log("p2pSend quit ex="+ex.getMessage)
+        logEx("p2pSend quit ex="+ex.getMessage)
     }
     p2pDisconnect
+    relayBasedP2pCommunication = false
     p2pQuitFlag = true
     p2pReset
     //log("p2pQuit -> relayQuit")

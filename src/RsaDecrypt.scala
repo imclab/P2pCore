@@ -22,21 +22,13 @@ import ext.org.bouncycastle.crypto.encodings.PKCS1Encoding
 object RsaDecrypt {
 
   def decrypt(key:String, encryptedData:String) :String = {
-    try {
-      val privateKey = PrivateKeyFactory.createKey(Base64.decode(key)) // AsymmetricKeyParameter
-      val asymmetricBlockCipher = new RSAEngine()
-      val asymmetricBlockCipher2 = new PKCS1Encoding(asymmetricBlockCipher)
-      asymmetricBlockCipher2.init(false, privateKey)
-      val messageBytes = hexStringToByteArray(encryptedData) // byte[]
-      val hexEncodedCipher = asymmetricBlockCipher2.processBlock(messageBytes, 0, messageBytes.length) // byte[]
-      return new String(hexEncodedCipher)
-
-    } catch {
-      case ex:Exception =>
-        ex.printStackTrace
-    }
-  
-    return null
+    val privateKey = PrivateKeyFactory.createKey(Base64.decode(key)) // AsymmetricKeyParameter
+    val asymmetricBlockCipher = new RSAEngine()
+    val asymmetricBlockCipher2 = new PKCS1Encoding(asymmetricBlockCipher)
+    asymmetricBlockCipher2.init(false, privateKey)
+    val messageBytes = hexStringToByteArray(encryptedData) // byte[]
+    val hexEncodedCipher = asymmetricBlockCipher2.processBlock(messageBytes, 0, messageBytes.length) // byte[]
+    return new String(hexEncodedCipher)
   }
 
   def hexStringToByteArray(s:String) :Array[Byte] = {

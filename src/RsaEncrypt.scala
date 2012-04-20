@@ -23,26 +23,18 @@ object RsaEncrypt {
 
   // note: individual string messages cannot be longer than the used key (RsaKeyGenerate.keySize = 1536 bits = 192 bytes)
   def encrypt(key:String, inputData:String) :String = {
-    try {
-      val keyBase64 = Base64.decode(key)
-      //println("encrypt() key="+key+" keyBase64="+keyBase64)
-      val publicKey = PublicKeyFactory.createKey(keyBase64)
-      val asymmetricBlockCipher = new RSAEngine()
-      val asymmetricBlockCipher2 = new PKCS1Encoding(asymmetricBlockCipher)
-      asymmetricBlockCipher2.init(true, publicKey)
-      val messageBytes = inputData.getBytes // byte[]
-      //println("encrypt() asymmetricBlockCipher2.processBlock() messageBytes.length="+messageBytes.length)
-      val hexEncodedCipher = asymmetricBlockCipher2.processBlock(messageBytes, 0, messageBytes.length) // byte[]
-      val hexString = getHexString(hexEncodedCipher)
-      //println("encrypt() return hexString="+hexString)
-      return hexString
-
-    } catch {
-      case ex:Exception =>
-        ex.printStackTrace
-    }
-  
-    return null
+    val keyBase64 = Base64.decode(key)
+    //println("encrypt() key="+key+" keyBase64="+keyBase64)
+    val publicKey = PublicKeyFactory.createKey(keyBase64)
+    val asymmetricBlockCipher = new RSAEngine()
+    val asymmetricBlockCipher2 = new PKCS1Encoding(asymmetricBlockCipher)
+    asymmetricBlockCipher2.init(true, publicKey)
+    val messageBytes = inputData.getBytes // byte[]
+    //println("encrypt() asymmetricBlockCipher2.processBlock() messageBytes.length="+messageBytes.length)
+    val hexEncodedCipher = asymmetricBlockCipher2.processBlock(messageBytes, 0, messageBytes.length) // byte[]
+    val hexString = getHexString(hexEncodedCipher)
+    //println("encrypt() return hexString="+hexString)
+    return hexString
   }
 
   def getHexString(byteArray:Array[Byte]) :String = {
