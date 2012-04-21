@@ -1,10 +1,7 @@
 P2pCore - A portable peer-to-peer framework
 ===========================================
 
-P2pCore is a protable peer-to-peer framework written in Scala. It enables back-to-back RSA encrypted and direct datagram socket communication between devices which are located behind firewalls. For this purpose, "UDP hole punching" as described in this document: [http://www.brynosaurus.com/pub/net/p2pnat/] is being implemented.
-One major objective was to link two parties and enable communication without any user accounts being involved.
-P2pCore is highly portable and can be used, for example, in Gnome/GTK and Android environments.
-P2pCore uses binary message encoding.
+P2pCore is a protable peer-to-peer framework written in Scala. It enables back-to-back RSA encrypted and direct datagram socket communication between devices which are located behind firewalls. For this purpose, "UDP hole punching" as described in this document: http://www.brynosaurus.com/pub/net/p2pnat/ is being implemented. One major objective was to link two parties and enable communication without users having to log in to a service, any accounts being required, etc. P2pCore is highly portable and can be used, for example, in Gnome/GTK and Android environments. P2pCore uses binary message encoding.
 
 
 
@@ -74,9 +71,9 @@ P2pBase works like RelayBase, but instead of using a relay server to route commu
 
     P2pBase relaySocket.getLocalPort=48564 relayServer=109.74.203.226 relayPort=18771
     P2pBase receiveHandler send encrypted initialMsg='...'
-    P2pBase combinedUdpAddrString this peer udpAddress=92.201.71.60:60177|192.168.1.135:60177
-    P2pBase receiveMsgHandler other peer combindedUdpAddress=92.201.71.60:51556|192.168.1.135:51556
-    P2pBase datagramSendThread udpIpAddr='92.201.71.60' udpPortInt=51556 connected
+    P2pBase combinedUdpAddrString this peer udpAddress=89.201.71.60:60177|192.168.1.135:60177
+    P2pBase receiveMsgHandler other peer combindedUdpAddress=89.201.71.60:51556|192.168.1.135:51556
+    P2pBase datagramSendThread udpIpAddr='89.201.71.60' udpPortInt=51556 connected
     P2pBase datagramSendThread udpIpAddr='192.168.1.135' udpPortInt=51556 abort
     P2pBase p2pReceiveHandler str='hello 0'
     P2pBase p2pReceiveHandler str='hello 1'
@@ -94,10 +91,10 @@ P2pEncrypt works like P2pBase, but all client to client data will be encrypted. 
     P2pEncrypt fullRemoteKeyName=keysAlice/bob.pub used for fingerprint matching
     P2pEncrypt relaySocket.getLocalPort=48878 relayServer=109.74.203.226 relayPort=18771
     P2pEncrypt receiveHandler send encrypted initialMsg='...'
-    P2pEncrypt combinedUdpAddrString this peer udpAddress=92.201.71.60:34570|192.168.1.135:34570
-    P2pEncrypt receiveMsgHandler other peer combindedUdpAddress='92.201.71.60:54413|192.168.1.135:54413'
+    P2pEncrypt combinedUdpAddrString this peer udpAddress=89.201.71.60:34570|192.168.1.135:34570
+    P2pEncrypt receiveMsgHandler other peer combindedUdpAddress='89.201.71.60:54413|192.168.1.135:54413'
     P2pEncrypt datagramSendThread udpIpAddr='192.168.1.135' udpPortInt=54413 abort
-    P2pEncrypt datagramSendThread udpIpAddr='92.201.71.60' udpPortInt=54413 connected
+    P2pEncrypt datagramSendThread udpIpAddr='89.201.71.60' udpPortInt=54413 connected
     P2pEncrypt p2pReceiveHandler decryptString='hello 0'
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
@@ -113,10 +110,10 @@ In this case, P2pEncrypt requires three arguments: 1. the name of the folder con
     P2pEncrypt matching clients with rendezvous string 'rendesvouz'
     P2pEncrypt relaySocket.getLocalPort=48884 relayServer=109.74.203.226 relayPort=18771
     P2pEncrypt receiveHandler send encrypted initialMsg='...'
-    P2pEncrypt combinedUdpAddrString this peer udpAddress=92.201.71.60:46347|192.168.1.135:46347
-    P2pEncrypt receiveMsgHandler other peer combindedUdpAddress='92.201.71.60:40939|192.168.1.135:40939'
-    P2pEncrypt datagramSendThread udpIpAddr='92.201.71.60' udpPortInt=40939 abort
-    P2pEncrypt datagramS endThread udpIpAddr='192.168.1.135' udpPortInt=40939 connected
+    P2pEncrypt combinedUdpAddrString this peer udpAddress=89.201.71.60:46347|192.168.1.135:46347
+    P2pEncrypt receiveMsgHandler other peer combindedUdpAddress='89.201.71.60:40939|192.168.1.135:40939'
+    P2pEncrypt datagramSendThread udpIpAddr='89.201.71.60' udpPortInt=40939 connected
+    P2pEncrypt datagramS endThread udpIpAddr='192.168.1.135' udpPortInt=40939 abort
     P2pEncrypt requestPubKeyFingerprint...
     P2pEncrypt sending fingerprint of our pubkey on request=5453889C95BDB4703CE7D83E6DEACA8F7E3774DB
     P2pEncrypt p2pReceiveHandler: remoteKeyFingerprint=0B40B89E4BE4F94BF2609F0EB522F693466FC14F
@@ -125,7 +122,7 @@ In this case, P2pEncrypt requires three arguments: 1. the name of the folder con
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Fingerprints are exchanged over the direct p2p link and are used to select the correct public key, needed to start back to back encryption.
+Fingerprints are exchanged as soon as the direct p2p link becomes available and are immediately being used to fetch the required public key, needed to start back to back encryption with the other party.
 
 
 More info
