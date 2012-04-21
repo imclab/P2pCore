@@ -59,7 +59,6 @@ class P2pBase extends RelayTrait {
     } 
 
     //log("p2pSend '"+sendString+"' len="+sendString.length+" to="+host+":"+port)
-    // note: max 532 bytes per udp; otherwise fragmentation
     if(host==relayServer) {
       val sendByteBuf = sendString.getBytes
       val sendDatagram = new DatagramPacket(sendByteBuf, sendByteBuf.length, new InetSocketAddress(host, port))
@@ -112,13 +111,14 @@ class P2pBase extends RelayTrait {
     // start receiving datagram's 
     // the first packet received will be our "publicUdpAddress:port" response from relay server's udp echo-service
     // we will use our tcp-relay connection to send this info to our peer
-    val byteBuf = new Array[Byte](2*1024)
-    // todo: size not smaller than RsaKeyGenerate.keySize ???
-    val datagram = new DatagramPacket(byteBuf, 2*1024)
+    val arraySize = 2*1024
+    val byteBuf = new Array[Byte](arraySize)
+    // array size not smaller than RsaKeyGenerate.keySize!
+    val datagram = new DatagramPacket(byteBuf, arraySize)
     while(!p2pQuitFlag) {
       try {
         datagram.setData(byteBuf)
-        datagram.setLength(1024)
+        datagram.setLength(arraySize)
         //log("p2pSocket="+p2pSocket)
         p2pSocket.receive(datagram)
         if(datagram.getLength>0) {
@@ -185,7 +185,7 @@ class P2pBase extends RelayTrait {
       val udpAddressString = tokenArrayOfStrings(0)
       if(udpAddressString.length>0) {
         // try to udp-communicate with the other parties external ip:port
-        // todo: implement direct-p2p connect-timeout starting now
+        // todo: implement direct-p2p connect-timeout starting here and now
 
         udpPunchAttempts +=1
         new Thread("datagramSendPublic") { override def run() {
@@ -224,10 +224,10 @@ class P2pBase extends RelayTrait {
 
       if(udpPunchAttempts==udpPunchFaults) {
         // all datagramSendThread's have failed
-        // todo: this still appears twice (the following if tries to prevent this, but not ideal)
         if(!relayBasedP2pCommunication) {
           p2pReset
           p2pFault(udpPunchAttempts)
+          // communicate with the other client via relay server
           relayBasedP2pCommunication = true
           p2pSendThread(udpConnectIpAddr,udpConnectPortInt)
         }
@@ -235,7 +235,7 @@ class P2pBase extends RelayTrait {
       return
     }
 
-    // tata - udp hole has been punched
+    // udp hole is punched
     log("datagramSendThread udpIpAddr=["+udpIpAddr+"] udpPortInt="+udpPortInt+" connected")
     p2pSendThread(udpConnectIpAddr,udpConnectPortInt)
   }

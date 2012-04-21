@@ -11,9 +11,9 @@ P2pCore uses binary message encoding.
 System requirements
 -------------------
 
-To run (or build) this software the following 3rd party software needs to be installed Scala 2.9.x, JDK 1.6 and Ant.
+To run (or build) this software the following 3rd party software packages needs to be installed: Scala 2.9.x, JDK 6 and Ant.
 
-On Debian you can install these with the following command:
+On Debian you would install:
 
     apt-get install scala ant
 
@@ -64,14 +64,13 @@ RelayStress works like RelayBase, but it sends "data" 5000 times before it sends
     RelayStress connectString finished sending; relayQuitFlag=false
     RelayStress receiveMsgHandler last; relayQuitFlag=false
     RelayStress relayExit outgoingDataCounter=5000 incomingDataCounter=5000
-
 The two instances match by telling the relay server to connect each other with another instance by the same advertised name 'RelayStress'.
 
 ### P2pBase
 
     ./run timur.p2pCore.P2pBase
 
-P2pBase works like RelayBase, but instead of using a relay server to route all communication, a direct p2p link will be established with another instance. The two instances get matched by asking the relay server to connect them with another instance with the same name 'P2pBase'. A relay server is only being used to match the two clients and to help them learn about their public adresses and port numbers. This info is required to get through any firewalls. All other communication between the clients (sending and receiving three hello strings in this case) is done client to client directly.
+P2pBase works like RelayBase, but instead of using a relay server to route communications, a direct p2p link will be established between the two client instances. Client ask the relay server to match them with another instance using the same name 'P2pBase'. The relay server is being used only to match the two clients and to help them learn about their public adresses and port numbers. All other communication is happening directly from client to client.
 
     P2pBase relaySocket.getLocalPort=48564 relayServer=109.74.203.226 relayPort=18771
     P2pBase receiveHandler send encrypted initialMsg='...'
@@ -84,24 +83,49 @@ P2pBase works like RelayBase, but instead of using a relay server to route all c
     P2pBase p2pReceiveHandler str='hello 2'
 
 
-### P2pEncrypt (key fingerprint matching)
+### P2pEncrypt
 
     ./run timur.p2pCore.P2pEncrypt keysAlice bob
     ./run timur.p2pCore.P2pEncrypt keysBob alice
 
-(todo:) # key-folder-path remote-public-key-name
+P2pEncrypt works like P2pBase, but all client to client data will be encrypted. In addition, the fingerprint of the selected remote public key is used to match the clients. P2pEncrypt needs two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the public key to which a connection shall be established.
 
+    P2pEncrypt fullLocalKeyName=keysAlice/key.pub used for fingerprint matching
+    P2pEncrypt fullRemoteKeyName=keysAlice/bob.pub used for fingerprint matching
+    P2pEncrypt relaySocket.getLocalPort=48878 relayServer=109.74.203.226 relayPort=18771
+    P2pEncrypt receiveHandler send encrypted initialMsg='...'
+    P2pEncrypt combinedUdpAddrString this peer udpAddress=92.201.71.60:34570|192.168.1.135:34570
+    P2pEncrypt receiveMsgHandler other peer combindedUdpAddress='92.201.71.60:54413|192.168.1.135:54413'
+    P2pEncrypt datagramSendThread udpIpAddr='192.168.1.135' udpPortInt=54413 abort
+    P2pEncrypt datagramSendThread udpIpAddr='92.201.71.60' udpPortInt=54413 connected
+    P2pEncrypt p2pReceiveHandler decryptString='hello 0'
+    P2pEncrypt p2pReceiveHandler decryptString='hello 1'
+    P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-### P2pEncrypt (Rendesvouz string matching)
+Rendesvouz string matching can be used as an alternative to fingerprint matching:
 
-    ./run timur.p2pCore.P2pEncrypt keysAlice bob rendesvouz
-    ./run timur.p2pCore.P2pEncrypt keysBob alice rendesvouz
+    ./run timur.p2pCore.P2pEncrypt keysAlice - rendesvouz
+    ./run timur.p2pCore.P2pEncrypt keysBob - rendesvouz
+    
+In this case, P2pEncrypt requires three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a unique matching string. Both clients need to enter the exact same string, in order to get mached. The advantage of using random Rendesvouz strings for matching, is that the relay server will not see any key fingerprints and therefor has no means to identify who is sending the request.
 
-(todo:) # key-folder-path remote-public-key-name rendevouz-string
+    P2pEncrypt fullLocalKeyName=keysBob/key.pub used for fingerprint matching
+    P2pEncrypt matching clients with rendezvous string 'rendesvouz'
+    P2pEncrypt relaySocket.getLocalPort=48884 relayServer=109.74.203.226 relayPort=18771
+    P2pEncrypt receiveHandler send encrypted initialMsg='...'
+    P2pEncrypt combinedUdpAddrString this peer udpAddress=92.201.71.60:46347|192.168.1.135:46347
+    P2pEncrypt receiveMsgHandler other peer combindedUdpAddress='92.201.71.60:40939|192.168.1.135:40939'
+    P2pEncrypt datagramSendThread udpIpAddr='92.201.71.60' udpPortInt=40939 abort
+    P2pEncrypt datagramS endThread udpIpAddr='192.168.1.135' udpPortInt=40939 connected
+    P2pEncrypt requestPubKeyFingerprint...
+    P2pEncrypt sending fingerprint of our pubkey on request=5453889C95BDB4703CE7D83E6DEACA8F7E3774DB
+    P2pEncrypt p2pReceiveHandler: remoteKeyFingerprint=0B40B89E4BE4F94BF2609F0EB522F693466FC14F
+    P2pEncrypt found stored pubKeyRemote in file alice.pub
+    P2pEncrypt p2pReceiveHandler decryptString='hello 0'
+    P2pEncrypt p2pReceiveHandler decryptString='hello 1'
+    P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-
-
-
+Fingerprints are exchanged over the direct p2p link and are used to select the correct public key, needed to start back to back encryption.
 
 
 More info

@@ -29,6 +29,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
 
   var privKeyLocal:String = null
   var pubKeyLocal:String = null
+  var pubKeyLocalFingerprint:String = null
   var pubKeyRemote:String = null
   var remoteKeyName = setRemoteKeyName
 
@@ -78,61 +79,70 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
   }
 
   def buildMatchStrings() :Int = {
-    if(rendezvous!=null && rendezvous.length>0) {
-      // build match strings based on the rendezvous string
-      matchSource = rendezvous
-      matchTarget = rendezvous
-      log("matching with rendezvous string '"+rendezvous+"'")
-      // remoteKeyName will be used as name of remotePublicKey to be stored
-      return 0
-    } 
-    
-    // build match strings based on public key fingerprints
     try {
-      val fullRemoteKeyName = keyFolderPath +"/" +remoteKeyName+".pub"
-      log("fullRemoteKeyName="+fullRemoteKeyName+" used for fingerprint matching")
-      pubKeyRemote = io.Source.fromFile(fullRemoteKeyName).mkString
-      // create match strings based on fingerprints of the two public keys
+      // create pubKeyLocalFingerprint based pubKeyLocal
       val messageDigest = MessageDigest.getInstance("SHA-1")
       messageDigest.update(Base64.decode(pubKeyLocal))
-      matchSource = RsaEncrypt.getHexString(messageDigest.digest).substring(0,20)
-      messageDigest.reset
-      messageDigest.update(Base64.decode(pubKeyRemote))
-      matchTarget = RsaEncrypt.getHexString(messageDigest.digest).substring(0,20)
-      //return 0
-
+      pubKeyLocalFingerprint = RsaEncrypt.getHexString(messageDigest.digest)
     } catch {
       case ex:Exception =>
         logEx("fingerprint setup error ex="+ex)
         return -1
+    }
+
+    if(rendezvous!=null && rendezvous.length>0) {
+      // build match strings based on the rendezvous string
+      matchSource = rendezvous
+      matchTarget = rendezvous
+      log("matching clients with rendezvous string '"+rendezvous+"'")
+      return 0
+    } 
+    
+    try {
+      // create match strings based on fingerprints of the two public keys
+      val fullRemoteKeyName = keyFolderPath +"/" +remoteKeyName+".pub"
+      log("fullRemoteKeyName="+fullRemoteKeyName+" used for fingerprint matching")
+      pubKeyRemote = io.Source.fromFile(fullRemoteKeyName).mkString
+      val messageDigest = MessageDigest.getInstance("SHA-1")
+      messageDigest.update(Base64.decode(pubKeyRemote))
+      val pubKeyRemoteFingerprint = RsaEncrypt.getHexString(messageDigest.digest)
+
+      matchSource = pubKeyLocalFingerprint.substring(0,20)
+      matchTarget = pubKeyRemoteFingerprint.substring(0,20)
+
+    } catch {
+      case ex:Exception =>
+        logEx("fingerprint setup error ex="+ex)
+        return -2
     }
     return 0
   }
 
   override def p2pSendThread(udpIpAddr:String, udpPortInt:Int) {
     if(pubKeyRemote!=null) {
+      // remote public key is available already
       p2pEncryptedCommunication
+
     } else {
+/*
+      // remote public key not yet available, request it from other side
       log("requestPubKeyViaRelay...")
       send("requestPubKeyViaRelay")
+*/
 
-      // later
-      // todo: instead check if we got the pubKeyRemote already stored
-      //       request the fingerprint of pubKeyRemote
-      //       log("requestPubKeyFingerprint...")
-      //       send("requestPubKeyFingerprint")
+      // request other client for fingerprint of it's public key, so we can check if we got it stored already
+      log("requestPubKeyFingerprint...")
+      send("requestPubKeyFingerprint") //,udpIpAddr,udpPortInt)
     }
   }
 
   override def p2pReceiveHandler(str:String, host:String, port:Int) {
+    // str is most likely encrypted 
     //log("p2pReceiveHandler str='"+str+"' ###########")
+/*
     if(str=="requestPubKeyFingerprint") {
-      // generate fingerprint from pubKeyLocal
-      val messageDigest = MessageDigest.getInstance("SHA-1")
-      messageDigest.update(Base64.decode(pubKeyLocal))
-      val pubKeyFingerprint = RsaEncrypt.getHexString(messageDigest.digest)
-      log("p2pSend: pubKeyFingerprint="+pubKeyFingerprint)
-      p2pSend("pubKeyFingerprint="+pubKeyFingerprint, host, port)
+      log("p2pSend: pubKeyLocalFingerprint="+pubKeyLocalFingerprint)
+      p2pSend("pubKeyFingerprint="+pubKeyLocalFingerprint, host, port)
 
     } else if(str.startsWith("pubKeyFingerprint=")) {
       val remoteKeyFingerprint = str.substring(18)
@@ -143,35 +153,78 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       p2pEncryptedCommunication
 
     } else {
+*/
       try {
         // possible exception: ext.org.bouncycastle.crypto.InvalidCipherTextException: unknown block type
         // possible exception: ext.org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher
         val decryptString = RsaDecrypt.decrypt(privKeyLocal, str)
         if(decryptString!=null)
           p2pReceiveUserData(decryptString)
+
       } catch {
         case ex:Exception =>
           logEx("p2pReceiveHandler "+ex.getMessage)
           ex.printStackTrace
       }
-          
+/*          
     }
+*/
   }
 
   def p2pReceiveUserData(str:String) {
+    // str is decrypted now
     log("p2pReceiveHandler decryptString='"+str+"'")
   }
 
   override def relayReceiveHandler(str:String) {
-    //log("relayReceiveHandler str='"+str+"'")  // never log any real user communication
-    if(str=="requestPubKeyViaRelay") {
-      log("send: pubkey") //"="+pubKeyLocal)
+    //log("relayReceiveHandler str='"+str+"'")  // never log user data
+/*
+    if(str=="requestPubKeyViaRelay") {      // to be deprecated
+      log("send our pubkey on request")
       send("pubkey="+pubKeyLocal)
 
-    } else if(str.startsWith("pubkey=")) {
+    } else if(str.startsWith("pubkey=")) {  // to be deprecated
       pubKeyRemote = str.substring(7)
       log("received pubKeyRemote")
       storeRemotePublicKey(remoteKeyName, pubKeyRemote)
+      p2pEncryptedCommunication
+
+    } else 
+*/
+    if(str=="requestPubKeyFingerprint") {
+      log("sending fingerprint of our pubkey on request="+pubKeyLocalFingerprint)
+      send("pubKeyFingerprint="+pubKeyLocalFingerprint)
+
+    } else if(str.startsWith("pubKeyFingerprint=")) {
+      val remoteKeyFingerprint = str.substring(18)
+      log("p2pReceiveHandler: remoteKeyFingerprint="+remoteKeyFingerprint)
+
+      // search all stored pub keys for a match to remoteKeyFingerprint
+      pubKeyRemote = null
+      val fileArray = new java.io.File(keyFolderPath).listFiles
+      for(file <- fileArray.iterator.toList) {
+        if(pubKeyRemote==null) {
+          val fileName = file.getName.trim
+          if(fileName.length>4 && fileName.endsWith(".pub") && fileName!="key.pub") {
+            val key = io.Source.fromFile(keyFolderPath+"/"+fileName).mkString
+            val messageDigest = MessageDigest.getInstance("SHA-1")
+            messageDigest.update(Base64.decode(key))
+            val fingerprint = RsaEncrypt.getHexString(messageDigest.digest)
+            if(fingerprint==remoteKeyFingerprint) {
+              log("found stored pubKeyRemote in file "+fileName)
+              pubKeyRemote = key
+            }
+          }
+        }
+      }
+
+      if(pubKeyRemote==null) {
+        log("not found stored pubKeyRemote - abort session")
+        p2pQuitFlag = true
+        p2pDisconnect
+        return
+      }
+
       p2pEncryptedCommunication
 
     } else {
