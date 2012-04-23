@@ -124,29 +124,39 @@ In this case, P2pEncrypt requires three arguments: 1. the name of the folder con
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Fingerprints are exchanged as soon as the direct p2p link becomes available and are immediately being used to fetch the required public key, needed to start back to back encryption with the other party.
+Fingerprints are exchanged as soon as the direct p2p link becomes available and are immediately being used to fetch the corresponding public keys, required to start back to back encryption with the other party.
 
 
 More info
 ---------
 
-- protobuf folder 
-  (todo:) 
+### Protobuf
 
-- bouncy-jarjar and bcprov-jdk15on-147.jar 
-  (todo:) 
+P2pCore makes use of Google Protobuf to package peer-to-peer data. The `protobuf` folder contains a file named `P2pCore.proto` which describes the raw datagram format. `P2pCore.proto` is being used to generate a Java class named `src/timur/P2pCore.java`. This Java class will be used to package over-the-wire data at runtime.
 
-- keys* folders 
-  (todo:) 
+### Bouncy Castle
 
-- getjars 
-  (todo:) 
+P2pCore makes use of Bouncy Castle to encrypt and decrypt using RSA cipher. In order for the default `bcprov-jdk15on-147.jar` library to be usable on Android OS, the default Java namespace `org.bouncycastle.*` was changed to `ext.org.bouncycastle.*` using the JarJar tool. The `bouncy-jarjar/` folder contains all info about this process.
 
-- relaykey.pub 
-  (todo:) 
+### Apache commons-codec
 
-- the role of the relayserver 
-  (todo:) 
+The commons-codec-1.6.jar library is being used only to encode and decode Base64 formated strings.
+
+### getjars
+
+The `getjars` script file is provided in order to document how the binary jar files can being fetched from the source.
+
+### RSA key files
+
+Two folders `keysAlice` and `keysBob` are provided for testing purposes. Both folders contain one individual RSA key pair (`key` and `key.pub`) as well as a third file, which is the other parties public key (`alice.pub` or `bob.pub`).
+
+### relaykey.pub
+
+A special `relaykey.pub` is provided which contains the public key of the relay server. Unsing this key, a P2pCore client may encrypt it's communication with a relay server, for instance to hide rendesvouz strings or key fingerprints, used to match two clients, from 3rd parties.
+
+### The role of the relay server
+
+Like any peer-to-peer client solutions, P2pCore requires some minimal 3rd-party support in order for two clients to be able to connect each other. The P2pCore relay server provides clients with a TCP relay service (port 18771) and an UDP echo service (port 18775). The P2pCore relay server does not mandate the use of any user accounts. The P2pCore relay server can be compared to a webserver, providing it's services without knowing it's users. P2pCore clients usually disconnect from the relay server as soon as a peer-to-peer connection has been established.
 
 
 License
@@ -158,19 +168,13 @@ Copyright (C) 2012 timur.mehrvarz@gmail.com
 
 3rd party libraries being used:
 
-- Bouncycastele
+- [Bouncy Castle][http://bouncycastle.org/]
 
-- Google protobuf
+- [Google Protobuf][https://code.google.com/p/protobuf/]
 
-- Apache commons-codec
+- [Apache Commons-codec][http://commons.apache.org/codec/]
 
-- JarJar
+- [jarjar tool][https://code.google.com/p/jarjar/]
 
-
-Todo
-----
-
-- RelayEncrypt out-of-date needs fix; still using "keys/key0" "keys/key0.pub"
-- ./run timur.p2pCore.RelayBench needs fix: "print duration time"
 
 

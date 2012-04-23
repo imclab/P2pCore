@@ -37,11 +37,11 @@ class P2pBench extends P2pBase {
     return super.start
   }
 
-  override def p2pSendThread(udpIpAddr:String, udpPortInt:Int) {
-    log("p2pSendThread start udpIpAddr='"+udpIpAddr+"' udpPortInt="+udpPortInt+" relayQuitFlag="+relayQuitFlag)
+  override def p2pSendThread() { // udpIpAddr:String, udpPortInt:Int) {
+    log("p2pSendThread start udpConnectIpAddr='"+udpConnectIpAddr+"' udpConnectPortInt="+udpConnectPortInt)
     startTime = System.currentTimeMillis
-    while(!relayQuitFlag && outgoingDataCounter<sendDataCount && udpIpAddr!=null) {
-      p2pSend(dataString, udpIpAddr, udpPortInt)
+    while(!relayQuitFlag && outgoingDataCounter<sendDataCount && udpConnectIpAddr!=null) {
+      p2pSend(dataString, udpConnectIpAddr, udpConnectPortInt)
       outgoingDataCounter+=1
 
       // try not to send udp data too fast...

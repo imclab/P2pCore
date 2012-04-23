@@ -40,17 +40,22 @@ trait RelayTrait {
   def start() :Int = {
     initHostPubKey
     relaySocket.setReuseAddress(true)
+
+    log("relaySocket.getLocalPort="+relaySocket.getLocalPort+" relayServer="+relayServer+" relayPort="+relayPort)
     relaySocket.connect(new InetSocketAddress(relayServer,relayPort))
     // may throw java.net.ConnectException: Connection refused
 
-    log("relaySocket.getLocalPort="+relaySocket.getLocalPort+" relayServer="+relayServer+" relayPort="+relayPort)
     socketOutWriter = new BufferedWriter(new OutputStreamWriter(relaySocket.getOutputStream))
     socketInReader = new BufferedReader(new InputStreamReader(relaySocket.getInputStream))
     send("hello")
 
+    var throwEx:Exception = null
     while(!relayQuitFlag && socketInReader!=null) {
       try {
         val msgString = socketInReader.readLine
+        // may throw java.net.ConnectException: Connection refused
+        // may throw java.net.SocketException: recvfrom failed: ETIMEDOUT (Connection timed out)
+
         if(msgString==null) {
           log(appName+" socketInReader msgString==null")
           relayQuitFlag = true
@@ -62,8 +67,10 @@ trait RelayTrait {
 
       } catch {
         case ex:Exception =>
-          //logEx("relay disconnected")
+          // if not manualy disconencted, this is not an error
           if(!relayQuitFlag) {
+            throwEx = ex
+            logEx("relay connection disconnected")
             ex.printStackTrace
             relayQuitFlag = true
           }
@@ -81,6 +88,8 @@ trait RelayTrait {
     }
 
     relayExit
+    if(throwEx!=null)
+      throw throwEx
     return 0
   }
 
@@ -91,8 +100,9 @@ trait RelayTrait {
   }
 
   def logEx(str:String) {
-    val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)
-    println(dateTime+" "+appName+" exception "+str+" ######")
+    //val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)
+    //println(dateTime+" "+appName+" exception "+str+" ######")
+    log("exception "+str+" ######")
   }
 
   def send(str:String) {
@@ -166,6 +176,7 @@ trait RelayTrait {
   }
 
   def relayQuit() {
+    // bring the relay connection down
     if(relaySocket!=null) {
       relayQuitFlag = true
       relaySocket.close

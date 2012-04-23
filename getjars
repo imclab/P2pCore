@@ -4,12 +4,17 @@
 #
 mkdir lib
 cd lib
-wget http://bouncycastle.org/download/bcprov-jdk15on-147.jar
+
+# get commons-codec-1.6.jar
 wget http://mirror.lwnetwork.org.uk/APACHE/commons/codec/binaries/commons-codec-1.6-bin.tar.gz
 tar -zxvf commons-codec-1.6-bin.tar.gz --get commons-codec-1.6/commons-codec-1.6.jar
 mv commons-codec-1.6/commons-codec-1.6.jar .
 rm -rf commons-codec-1.6
 rm commons-codec-1.6-bin.tar.gz
-#todo: get protobuf-java-2.3.0.jar
+
+# see 'bouncy-jarjar' folder
+#wget http://bouncycastle.org/download/bcprov-jdk15on-147.jar
+
+# todo: how to get 'protobuf-java-2.3.0.jar'
 cd ..
 

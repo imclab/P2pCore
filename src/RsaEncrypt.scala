@@ -21,7 +21,7 @@ import ext.org.bouncycastle.crypto.encodings.PKCS1Encoding
 
 object RsaEncrypt {
 
-  // note: individual string messages cannot be longer than the used key (RsaKeyGenerate.keySize = 1536 bits = 192 bytes)
+  // note: individual string messages cannot be longer than the used key (RsaKeyGenerate.keySize = 1536 bits = ~192 bytes)
   def encrypt(key:String, inputData:String) :String = {
     val keyBase64 = Base64.decode(key)
     //println("encrypt() key="+key+" keyBase64="+keyBase64)

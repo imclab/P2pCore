@@ -118,86 +118,54 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     return 0
   }
 
-  override def p2pSendThread(udpIpAddr:String, udpPortInt:Int) {
+  override def p2pSendThread() {
+    // we are now p2p connected (if relayBasedP2pCommunication is set, p2p is relayed; else it is direct)
     if(pubKeyRemote!=null) {
-      // remote public key is available already
+      // remote public key is known
+      log("p2pSendThread -> p2pEncryptedCommunication...")
       p2pEncryptedCommunication
 
     } else {
-/*
-      // remote public key not yet available, request it from other side
-      log("requestPubKeyViaRelay...")
-      send("requestPubKeyViaRelay")
-*/
-
-      // request other client for fingerprint of it's public key, so we can check if we got it stored already
-      log("requestPubKeyFingerprint...")
-      send("requestPubKeyFingerprint") //,udpIpAddr,udpPortInt)
+      // remote public key is NOT known, request public key fingerprint, so we can check if we have the key stored already
+      log("p2pSendThread requestPubKeyFingerprint...")
+      p2pSend("requestPubKeyFingerprint", udpConnectIpAddr,udpConnectPortInt)    // unencrypted request for pubkey fingerprint
+      // p2pEncryptedCommunication will be called, as soon as we receive "pubKeyFingerprint=..." in p2pReceiveHandler     
     }
   }
 
-  override def p2pReceiveHandler(str:String, host:String, port:Int) {
-    // str is most likely encrypted 
-    //log("p2pReceiveHandler str='"+str+"' ###########")
-/*
-    if(str=="requestPubKeyFingerprint") {
-      log("p2pSend: pubKeyLocalFingerprint="+pubKeyLocalFingerprint)
-      p2pSend("pubKeyFingerprint="+pubKeyLocalFingerprint, host, port)
+  override def p2pReceiveMultiplexHandler(protoMultiplex:P2pCore.Message) {
+    val command = protoMultiplex.getCommand
+    if(command=="string") {
+      super.p2pReceiveMultiplexHandler(protoMultiplex)
 
-    } else if(str.startsWith("pubKeyFingerprint=")) {
-      val remoteKeyFingerprint = str.substring(18)
-      log("p2pReceiveHandler: remoteKeyFingerprint="+remoteKeyFingerprint)
-      // todo: search all stored pub keys for remoteKeyFingerprint
-      pubKeyRemote = "" // todo: fetch the found key
-      log("found stored pubKeyRemote")
-      p2pEncryptedCommunication
+    } else if(command=="rsastr") {     
+      val len = protoMultiplex.getMsgLength.asInstanceOf[Int]
+      val receivedString = protoMultiplex.getMsgString
+      //val id = protoMultiplex.getMsgId
 
-    } else {
-*/
       try {
         // possible exception: ext.org.bouncycastle.crypto.InvalidCipherTextException: unknown block type
         // possible exception: ext.org.bouncycastle.crypto.DataLengthException: input too large for RSA cipher
-        val decryptString = RsaDecrypt.decrypt(privKeyLocal, str)
-        if(decryptString!=null)
-          p2pReceiveUserData(decryptString)
+        //log("p2pReceiveMultiplexHandler: crypted="+receivedString+" len="+receivedString.length)
+        val decryptString = RsaDecrypt.decrypt(privKeyLocal, receivedString)
+        p2pReceivePreHandler(decryptString) // -> p2pReceiveHandler
 
       } catch {
         case ex:Exception =>
-          logEx("p2pReceiveHandler "+ex.getMessage)
+          logEx("p2pReceiveMultiplexHandler "+ex.getMessage)
           ex.printStackTrace
       }
-/*          
     }
-*/
   }
 
-  def p2pReceiveUserData(str:String) {
-    // str is decrypted now
-    log("p2pReceiveHandler decryptString='"+str+"'")
-  }
-
-  override def relayReceiveHandler(str:String) {
-    //log("relayReceiveHandler str='"+str+"'")  // never log user data
-/*
-    if(str=="requestPubKeyViaRelay") {      // to be deprecated
-      log("send our pubkey on request")
-      send("pubkey="+pubKeyLocal)
-
-    } else if(str.startsWith("pubkey=")) {  // to be deprecated
-      pubKeyRemote = str.substring(7)
-      log("received pubKeyRemote")
-      storeRemotePublicKey(remoteKeyName, pubKeyRemote)
-      p2pEncryptedCommunication
-
-    } else 
-*/
+  override def p2pReceivePreHandler(str:String) {
     if(str=="requestPubKeyFingerprint") {
-      log("sending fingerprint of our pubkey on request="+pubKeyLocalFingerprint)
-      send("pubKeyFingerprint="+pubKeyLocalFingerprint)
+      log("p2pReceivePreHandler: sending fingerprint of our pubkey on request="+pubKeyLocalFingerprint)
+      p2pSend("pubKeyFingerprint="+pubKeyLocalFingerprint, udpConnectIpAddr, udpConnectPortInt)
 
     } else if(str.startsWith("pubKeyFingerprint=")) {
       val remoteKeyFingerprint = str.substring(18)
-      log("p2pReceiveHandler: remoteKeyFingerprint="+remoteKeyFingerprint)
+      log("p2pReceivePreHandler: remoteKeyFingerprint="+remoteKeyFingerprint)
 
       // search all stored pub keys for a match to remoteKeyFingerprint
       pubKeyRemote = null
@@ -211,7 +179,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
             messageDigest.update(Base64.decode(key))
             val fingerprint = RsaEncrypt.getHexString(messageDigest.digest)
             if(fingerprint==remoteKeyFingerprint) {
-              log("found stored pubKeyRemote in file "+fileName)
+              log("p2pReceivePreHandler: found stored pubKeyRemote in file "+fileName)
               pubKeyRemote = key
             }
           }
@@ -219,48 +187,45 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       }
 
       if(pubKeyRemote==null) {
-        log("not found stored pubKeyRemote - abort session")
+        log("p2pReceivePreHandler: not found stored pubKeyRemote - abort session")
         p2pQuitFlag = true
-        p2pDisconnect
+        p2pQuit
+        relayReceiveEncryptionFailed(remoteKeyFingerprint)
         return
       }
 
-      p2pEncryptedCommunication
+      log("p2pReceivePreHandler -> p2pEncryptedCommunication...")
+      new Thread("datagramSendPublic") { override def run() {
+        p2pEncryptedCommunication
+      } }.start
 
     } else {
-      //log("relayReceiveHandler str='"+str+"'")  // never log any real user communication
-      val p2pCoreMessage = Base64.decode(str)
-      val protoMultiplex = P2pCore.Message.parseFrom(p2pCoreMessage)
-      val command = protoMultiplex.getCommand
-      if(command=="string") {
-        val len = protoMultiplex.getMsgLength.asInstanceOf[Int]
-        val receivedString = protoMultiplex.getMsgString
-        if(receivedString=="quit") {
-          // relay-server based communication will be ended this way (with an unencrypted 'quit') 
-          p2pQuitFlag = true
-          p2pDisconnect
-
-        } else {        
-          //log("relayReceiveHandler receivedString='"+receivedString+"'")  // never log any real user communication
-          var decryptString:String = null
-          try {
-            decryptString = RsaDecrypt.decrypt(privKeyLocal, receivedString)
-          } catch {
-            case invChioherTextEx:ext.org.bouncycastle.crypto.InvalidCipherTextException =>
-              logEx("relayReceiveHandler invChioherTextEx="+invChioherTextEx)
-          }
-
-          if(decryptString!=null) {
-            //log("relayReceiveHandler decryptString='"+decryptString+"'")  // never log any real user communication
-            relayReceiveUserData(decryptString)
-          }
-        }
-      }
+      super.p2pReceivePreHandler(str) // -> p2pReceiveHandler()
     }
   }
+  
+  def relayReceiveEncryptionFailed(remoteKeyFingerprint:String) {
+    // remote public key not found in filesystem after evaluating received fingerprint
+  }
 
-  def relayReceiveUserData(str:String) {
+  override def p2pReceiveHandler(str:String, host:String, port:Int) {
+    // here we receive and process decrypted data strings from the other client
+    // sent directly per UDP - or relayed per TCP if relayBasedP2pCommunication is set
+    // if relayBasedP2pCommunication is not set, we may disconnect the relay connection now 
     log("p2pReceiveHandler decryptString='"+str+"'")
+  }
+
+  override def relayReceiveHandler(str:String) {
+    // this is not being used in p2p mode: all data goes to p2pReceiveHandler (even if relayed as a fallback)
+    // except if relayBasedP2pCommunication is set (that is: if direct-p2p failed due to firewalls)
+    if(relayBasedP2pCommunication) {
+      val p2pCoreMessage = Base64.decode(str)
+      val protoMultiplex = P2pCore.Message.parseFrom(p2pCoreMessage)
+      p2pReceiveMultiplexHandler(protoMultiplex)  // -> p2pReceivePreHandler() -> p2pEncryptedCommunication()
+      return
+    }
+
+    log("relayReceiveHandler !relayBasedP2pComm str='"+str+"' pubKeyRemote="+pubKeyRemote+" UNEXP IN P2P MODE ###########")
   }
 
   def storeRemotePublicKey(keyName:String, keystring:String) {
@@ -268,10 +233,12 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
   }
 
   def p2pEncryptedCommunication() {
+    // we are now p2p connected and encryption is enabled
+    log("p2pEncryptedCommunication...")
     for(i <- 0 until 3) {
       val unencryptedMessage = "hello "+i  // maxSize of unencrypted string ~128 bytes (?)
       val encryptedMessage = RsaEncrypt.encrypt(pubKeyRemote, unencryptedMessage)
-      p2pSend(encryptedMessage, udpConnectIpAddr, udpConnectPortInt)
+      p2pSend(encryptedMessage, udpConnectIpAddr, udpConnectPortInt, "rsastr")
       try { Thread.sleep(1000); } catch { case ex:Exception => }
     }
     p2pQuit

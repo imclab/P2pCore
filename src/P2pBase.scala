@@ -52,7 +52,8 @@ class P2pBase extends RelayTrait {
     return ret
   }
 
-  def p2pSend(sendString:String, host:String, port:Int) :Unit = synchronized {
+  def p2pSend(sendString:String, host:String, port:Int, cmd:String="string") :Unit = synchronized {
+    // if relayBasedP2pCommunication is set, use send(); else use p2pSocket.send()
     if(sendString==null) {
       log("p2pSend sendString==null to="+host+":"+port)
       return
@@ -60,13 +61,15 @@ class P2pBase extends RelayTrait {
 
     //log("p2pSend '"+sendString+"' len="+sendString.length+" to="+host+":"+port)
     if(host==relayServer) {
+      // special case to send udp data to the relay server udp echo service
       val sendByteBuf = sendString.getBytes
       val sendDatagram = new DatagramPacket(sendByteBuf, sendByteBuf.length, new InetSocketAddress(host, port))
       p2pSocket.send(sendDatagram)
 
     } else {
+      // sending data to the other peer
       val p2pCoreMsg = P2pCore.Message.newBuilder
-                              .setCommand("string")
+                              .setCommand(cmd)
                               .setMsgLength(sendString.length)
                               .setMsgString(sendString)
                               .build
@@ -88,7 +91,7 @@ class P2pBase extends RelayTrait {
   }
 
   override def connectedThread(connectString:String) {
-    // we are now tcp connected via relay server
+    // we are now p2p-connected via relay server (tcp)
 
     /*
       // this code could be used for TCP hole punching (but we don't know how to do this yet)
@@ -105,7 +108,7 @@ class P2pBase extends RelayTrait {
 
     // first get our own public/external udp-port from relay server's udp echo-service
     p2pSend("hello", relayServer, udpEchoPort)
-    // todo: does this get through in vf network?
+    // todo: does this UDP delivery get through in vf network?
     // compare with http://en.wikipedia.org/wiki/STUN#Classic_STUN_NAT_characterization_algorithm
 
     // start receiving datagram's 
@@ -123,10 +126,10 @@ class P2pBase extends RelayTrait {
         p2pSocket.receive(datagram)
         if(datagram.getLength>0) {
           val receivedString = new String(byteBuf,0,datagram.getLength)
-          //log("datagram.getLength="+datagram.getLength+" receivedString='"+receivedString+"' from="+datagram.getAddress.getHostAddress)
+          //log("datagram len="+datagram.getLength+" str='"+receivedString+"' from="+datagram.getAddress.getHostAddress)
 
           if(datagram.getAddress.getHostAddress==relayServer) {
-            // response from relay server's udp echo-service
+            // special case: response from relay server's udp echo-service
             publicUdpAddrString = receivedString
             var combinedUdpAddrString = "udpAddress="+publicUdpAddrString
             if(p2pSocket!=null)
@@ -135,33 +138,13 @@ class P2pBase extends RelayTrait {
             send(combinedUdpAddrString)
 
           } else {
+            // this DatagramPacket is coming from the other client
+            udpConnectIpAddr = datagram.getAddress.getHostAddress
+            udpConnectPortInt = datagram.getPort
             val msgBuf = new Array[Byte](datagram.getLength)
             for(i <- 0 until datagram.getLength) 
               msgBuf(i) = byteBuf(i)
-            val protoMultiplex = P2pCore.Message.parseFrom(msgBuf)
-            val command = protoMultiplex.getCommand
-            if(command=="string") {
-              udpConnectIpAddr = datagram.getAddress.getHostAddress
-              udpConnectPortInt = datagram.getPort
-
-              val len = protoMultiplex.getMsgLength.asInstanceOf[Int]
-              val receivedString = protoMultiplex.getMsgString
-              //val id = protoMultiplex.getMsgId
-
-              if(receivedString=="quit") {
-                p2pQuitFlag = true
-                p2pDisconnect
-
-              } else if(receivedString=="check") {
-                p2pSend("ack", datagram.getAddress.getHostAddress, datagram.getPort)
-
-              } else if(receivedString=="ack") {
-                udpConnectConfirmed = true
-
-              } else {
-                p2pReceiveHandler(receivedString, datagram.getAddress.getHostAddress, datagram.getPort)
-              }
-            }
+            p2pReceiveMultiplexHandler(P2pCore.Message.parseFrom(msgBuf))
           }
         }
       } catch {
@@ -172,13 +155,40 @@ class P2pBase extends RelayTrait {
       }
     }
   }
+  
+  def p2pReceiveMultiplexHandler(protoMultiplex:P2pCore.Message) {
+    val command = protoMultiplex.getCommand
+    if(command=="string") {
+      val len = protoMultiplex.getMsgLength.asInstanceOf[Int]
+      val receivedString = protoMultiplex.getMsgString
+      //val id = protoMultiplex.getMsgId
+      p2pReceivePreHandler(receivedString:String)
+    }
+  }
+
+  def p2pReceivePreHandler(str:String) {
+    if(str=="quit") {
+      p2pQuitFlag = true
+      p2pQuit
+
+    } else if(str=="check") {
+      p2pSend("ack", udpConnectIpAddr, udpConnectPortInt)
+
+    } else if(str=="ack") {
+      udpConnectConfirmed = true
+
+    } else {
+      p2pReceiveHandler(str, udpConnectIpAddr, udpConnectPortInt)
+    }
+  }
 
   override def receiveMsgHandler(str:String) {
-    // will be called every time we receive from the other client: TCP data via relay server
-
+    // we receive p2p-data indirectly via relay server
     udpPunchAttempts=0
     udpPunchFaults=0
     if(str.startsWith("udpAddress=")) {
+      // "udpAddress=..." is the only data we always receive from the other client via relay (unencoded/non-multiplexed format)
+      // because NO direct p2p-connection was established yet
       val combindedUdpAddress = str.substring(11)
       log("receiveMsgHandler other peer combindedUdpAddress=["+combindedUdpAddress+"]")
       val tokenArrayOfStrings = combindedUdpAddress.trim split '|'
@@ -202,10 +212,13 @@ class P2pBase extends RelayTrait {
             datagramSendThread(tokenArrayOfStrings3(0),new java.lang.Integer(tokenArrayOfStrings3(1)).intValue)
           } }.start
         }
+        
+        // if the udp hole was punched, call p2pSendThread()
       }
       return
     }
 
+    // in p2p mode, this is not being used: all data goes to p2pReceiveHandler (even if relayed as a fallback)
     relayReceiveHandler(str)
   }
 
@@ -229,7 +242,7 @@ class P2pBase extends RelayTrait {
           p2pFault(udpPunchAttempts)
           // communicate with the other client via relay server
           relayBasedP2pCommunication = true
-          p2pSendThread(udpConnectIpAddr,udpConnectPortInt)
+          p2pSendThread //(udpConnectIpAddr,udpConnectPortInt)
         }
       }
       return
@@ -237,7 +250,7 @@ class P2pBase extends RelayTrait {
 
     // udp hole is punched
     log("datagramSendThread udpIpAddr=["+udpIpAddr+"] udpPortInt="+udpPortInt+" connected")
-    p2pSendThread(udpConnectIpAddr,udpConnectPortInt)
+    p2pSendThread //(udpConnectIpAddr,udpConnectPortInt)
   }
 
   def p2pFault(attempts:Int) {
@@ -251,6 +264,7 @@ class P2pBase extends RelayTrait {
   }
 
   def p2pQuit() {
+    // this will bring the p2p connection down
     //log("p2pQuit")
     if(waitingRelayThread!=null)
       waitingRelayThread.interrupt
@@ -260,7 +274,6 @@ class P2pBase extends RelayTrait {
       case ex:Exception =>
         logEx("p2pSend quit ex="+ex.getMessage)
     }
-    p2pDisconnect
     relayBasedP2pCommunication = false
     p2pQuitFlag = true
     p2pReset
@@ -268,25 +281,28 @@ class P2pBase extends RelayTrait {
     relayQuit
   }
 
-  def p2pExit() { }
-
-  def relayReceiveHandler(str:String) {
-    log("relayReceiveHandler str='"+str+"'")
+  def p2pReceiveHandler(str:String, host:String, port:Int) {
+    // we receive data strings (per UDP) from the other client
+    log("p2pReceiveHandler str='"+str+"'")
   }
 
-  def p2pSendThread(udpIpAddr:String, udpPortInt:Int) {
+  def relayReceiveHandler(str:String) {
+    // we receive data via (or from) the relay server 
+    // in p2p mode, this is not being used: all data goes to p2pReceiveHandler (even if relayed as a fallback)
+    log("relayReceiveHandler str='"+str+"' UNEXPECTED IN P2P MODE ###########")
+  }
+
+  def p2pSendThread() { //udpIpAddr:String, udpPortInt:Int) {
+    // we are now p2p connected (if relayBasedP2pCommunication is set, p2p is relayed; else it is direct)
     for(i <- 0 until 3) {
-      p2pSend("hello "+i, udpIpAddr ,udpPortInt)
+      p2pSend("hello "+i, udpConnectIpAddr, udpConnectPortInt)
       try { Thread.sleep(1000); } catch { case ex:Exception => }
     }
     p2pQuit
   }
 
-  def p2pReceiveHandler(str:String, host:String, port:Int) {
-    // will be called every time we receive a direct (UDP) message from the other client
-    log("p2pReceiveHandler str='"+str+"'")
+  def p2pExit() { 
+    // the p2p connection has ended now
   }
-  
-  def p2pDisconnect() { }
 }
 
