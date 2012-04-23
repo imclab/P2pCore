@@ -140,11 +140,11 @@ P2pCore makes use of Bouncy Castle to encrypt and decrypt using RSA cipher. In o
 
 ### Apache commons-codec
 
-The commons-codec-1.6.jar library is being used only to encode and decode Base64 formated strings.
+The commons-codec-1.6.jar library is being used to encode and decode Base64 formated strings only.
 
 ### getjars
 
-The `getjars` script file is provided in order to document how the binary jar files can being fetched from the source.
+The `getjars` script file is provided to document how the binary jar files can being fetched from their source.
 
 ### RSA key files
 
@@ -168,13 +168,13 @@ Copyright (C) 2012 timur.mehrvarz@gmail.com
 
 3rd party libraries being used:
 
-- [Bouncy Castle][http://bouncycastle.org/]
+- Bouncy Castle http://bouncycastle.org/
 
-- [Google Protobuf][https://code.google.com/p/protobuf/]
+- Google Protobuf https://code.google.com/p/protobuf/
 
-- [Apache Commons-codec][http://commons.apache.org/codec/]
+- Apache Commons-codec http://commons.apache.org/codec/
 
-- [jarjar tool][https://code.google.com/p/jarjar/]
+- jarjar tool https://code.google.com/p/jarjar/
 
 
 
