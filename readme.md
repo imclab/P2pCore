@@ -45,7 +45,7 @@ RelayBase will establish a communication link with another instance of RelayBase
 
     ./run timur.p2pCore.RelayBase
   
-The RelayBase class only implements two methods and only has a 10-15 lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. The two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. This is what is being displayed in the console, when looking at one of the two instances:
+The [RelayBase](blob/master/src/RelayBase.scala) class implements two methods in only 10-15 lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. The two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. This is what is being displayed in the console, when looking at one of the two instances:
 
     RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771y
     RelayBase receiveHandler send encrypted initialMsg='...'
@@ -146,7 +146,7 @@ P2pCore makes use of Google Protobuf to package peer-to-peer data. The [protobuf
 
 ### Bouncy Castle
 
-P2pCore makes use of Bouncy Castle to encrypt and decrypt using RSA cipher. In order for the default `bcprov-jdk15on-147.jar` library to be usable on Android OS, the default Java namespace `org.bouncycastle.*` was changed to `ext.org.bouncycastle.*` using the JarJar tool. The `bouncy-jarjar/` folder contains all info about this process.
+P2pCore makes use of Bouncy Castle to encrypt and decrypt using RSA cipher. In order for the default `bcprov-jdk15on-147.jar` library to be usable on Android OS, the default Java namespace `org.bouncycastle.*` was changed to `ext.org.bouncycastle.*` using the JarJar tool. The [bouncy-jarjar](blob/master/bouncy-jarjar) folder contains all info about this process.
 
 ### Apache commons-codec
 
@@ -174,7 +174,7 @@ License
 
 Source code is licensed under the GNU General Public License, Version 3
 
-See `LICENSE` file.
+See [LICENSE](blob/master/LICENSE).
 
 Copyright (C) 2012 timur.mehrvarz@gmail.com
 
