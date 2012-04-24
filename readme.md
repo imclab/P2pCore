@@ -36,7 +36,7 @@ A `run` script is provided to let you invoke different functionality. The `run` 
 
 Two instances of the software need to run at the same time, so they can connect to each other and transfer data back and forth. Ideally, you would run the two instances on separate machines. Running both instances on the same machine is, of course, possible. But if there are no firewals to bridge, the purpose of the project would be kind of defeated. Ideally you would use separate machines in different networks and behind firewalls. (Example setup: two laptops, one connected to the internet via DSL, the other one connected to internet via 3G card or mobile phone tethering.)
 
-Frameworks need to be embedded in applications to become 'alive'. The P2pCore framework comes with a small number of console apps as listed below. The purpose of these apps is testing and prove of concept.
+Frameworks need to be embedded in applications to become 'alive'. The P2pCore framework comes with a small number of console apps as listed below. The purpose of these apps is testing and proof of concept.
 
 
 ### RelayBase
