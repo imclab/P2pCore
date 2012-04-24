@@ -154,7 +154,7 @@ The commons-codec-1.6.jar library is being used to encode and decode Base64 form
 
 ### getjars
 
-The `getjars` script file is provided to document how the binary jar files can be fetched from their original source.
+The [getjars](blob/master/getjars) script file is provided to document how the binary jar files can be fetched from their original source.
 
 ### RSA key files
 
