@@ -142,7 +142,7 @@ More info
 
 ### Protobuf
 
-P2pCore makes use of Google Protobuf to package peer-to-peer data. The `protobuf` folder contains a file named `P2pCore.proto` which describes the raw datagram format. `P2pCore.proto` is being used to generate a Java class named `src/timur/P2pCore.java`. This Java class will be used to package over-the-wire data at runtime.
+P2pCore makes use of Google Protobuf to package peer-to-peer data. The [protobuf](blob/master/protobuf) folder contains file [P2pCore.proto](blob/master/protobuf/P2pCore.proto) describing the raw transfer format. This file is being used to generate a Java class named [P2pCore.java](blob/master/src/timur/P2pCore.java). This Java class will be used at runtime, to encode and decode binary over-the-wire packages.
 
 ### Bouncy Castle
 
@@ -162,7 +162,7 @@ Two folders `keysAlice` and `keysBob` are provided for testing purposes. Both fo
 
 ### relaykey.pub
 
-A special `relaykey.pub` is provided which contains the relay servers public RSA key. A P2pCore client can encrypt it's communication towards a relay server using this key. The purpose is to hide this communication (rendesvouz strings or key fingerprints) from 3rd party eyes.
+A special [relaykey.pub](blob/master/relaykey.pub) is provided which contains the relay servers public RSA key. A P2pCore client can encrypt it's communication towards a relay server using this key. The purpose is to hide this communication (rendesvouz strings or key fingerprints) from 3rd party eyes.
 
 ### The role of the relay server
 
