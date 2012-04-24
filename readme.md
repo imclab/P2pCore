@@ -1,7 +1,7 @@
 P2pCore - A portable peer-to-peer framework
 ===========================================
 
-P2pCore is a protable peer-to-peer framework written in Scala. It enables back-to-back RSA encrypted and direct datagram socket communication between devices which are located behind firewalls. For this purpose, "UDP hole punching" as described in this document http://www.brynosaurus.com/pub/net/p2pnat/ was being implemented. One major objective was to link two parties and enable communication without users having to log in to a service, or any accounts/usernames/passwords being required. 
+P2pCore is a portable peer-to-peer framework written in Scala. It enables back-to-back RSA encrypted and direct datagram socket communication between devices which are located behind firewalls. For this purpose, "UDP hole punching" as described in this document http://www.brynosaurus.com/pub/net/p2pnat/ was being implemented. One major objective was to link two parties and enable communication without users having to log in to a service, or any accounts/usernames/passwords being required. 
 
 P2pCore is highly portable and can be used, for example, in Gnome/GTK and Android environments. P2pCore uses binary message encoding.
 
@@ -152,7 +152,7 @@ Two folders `keysAlice` and `keysBob` are provided for testing purposes. Both fo
 
 ### relaykey.pub
 
-A special `relaykey.pub` is provided which contains the relay servers public key. A P2pCore client can encrypt it's communication with a relay server using this key. The purpose is to hide it's communication (rendesvouz strings or key fingerprints) from any 3rd party eyes.
+A special `relaykey.pub` is provided which contains the relay servers public RSA key. A P2pCore client can encrypt it's communication towards a relay server using this key. The purpose is to hide this communication (rendesvouz strings or key fingerprints) from 3rd party eyes.
 
 ### The role of the relay server
 
