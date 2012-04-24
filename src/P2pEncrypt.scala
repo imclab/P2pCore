@@ -33,6 +33,9 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
   var pubKeyRemote:String = null
   var remoteKeyName = setRemoteKeyName
 
+  /**
+   *
+   */
   override def start() :Int = {
     init
     val ret = readkeys
@@ -41,19 +44,25 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     return super.start
   }
 
+  /**
+   * init is being used to prepare org.bouncycastle.crypto.encodings.PKCS1Encoding in RsaEncrypt/RsaDecrypt
+   */
   def init() {
-    // prepare org.bouncycastle.crypto.encodings.PKCS1Encoding in RsaEncrypt/RsaDecrypt
     Security.addProvider(new ext.org.bouncycastle.jce.provider.BouncyCastleProvider())
   }
 
+  /**
+   * readkeys will 
+   * try to load privKeyLocal and pubKeyLocal from keyFolderPath
+   * or: generate a new key pair and set privKeyLocal and pubKeyLocal
+   * @return 0 if there was no error
+   */
   def readkeys() :Int = {
     if(remoteKeyName.length<=0)
       return -1
 
     try {
-      // load local key pair
       privKeyLocal = io.Source.fromFile(keyFolderPath+"/key").mkString
-
       val fullLocalKeyName = keyFolderPath+"/key.pub"
       log("fullLocalKeyName="+fullLocalKeyName+" used for fingerprint matching")
       pubKeyLocal = io.Source.fromFile(fullLocalKeyName).mkString
@@ -78,9 +87,14 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     return 0
   }
 
+  /**
+   * buildMatchStrings will define matchSource and matchTarget 
+   * based on: rendezvous string - or -
+   * based on: pubKeyLocalFingerprint and pubKeyRemoteFingerprint
+   */
   def buildMatchStrings() :Int = {
     try {
-      // create pubKeyLocalFingerprint based pubKeyLocal
+      // create pubKeyLocalFingerprint based on pubKeyLocal
       val messageDigest = MessageDigest.getInstance("SHA-1")
       messageDigest.update(Base64.decode(pubKeyLocal))
       pubKeyLocalFingerprint = RsaEncrypt.getHexString(messageDigest.digest)
@@ -118,8 +132,13 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     return 0
   }
 
+  /**
+   * p2pSendThread is called when a p2p connection was established
+   * if relayBasedP2pCommunication is set, p2p is relayed; else it is direct
+   * if pubKeyRemote is not known, a key fingerprint will be requested using "requestPubKeyFingerprint"
+   * processing will then be forward to p2pEncryptedCommunication
+   */
   override def p2pSendThread() {
-    // we are now p2p connected (if relayBasedP2pCommunication is set, p2p is relayed; else it is direct)
     if(pubKeyRemote!=null) {
       // remote public key is known
       log("p2pSendThread -> p2pEncryptedCommunication...")
@@ -133,6 +152,11 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     }
   }
 
+  /**
+   * p2pReceiveMultiplexHandler will be called with an encoded P2pCore.Message
+   * will decrypt MsgString (if nesessary) and 
+   * if there was no error, hand over the decrypted string from the other client to p2pReceivePreHandler
+   */
   override def p2pReceiveMultiplexHandler(protoMultiplex:P2pCore.Message) {
     val command = protoMultiplex.getCommand
     if(command=="string") {
@@ -158,6 +182,10 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     }
   }
 
+  /**
+   * p2pReceivePreHandler is called as soon as p2p data was encrypted
+   * will process special commands, such as "requestPubKeyFingerprint", "pubKeyFingerprint=...", "check", "ack", "quit"
+   */
   override def p2pReceivePreHandler(str:String) {
     if(str=="requestPubKeyFingerprint") {
       log("p2pReceivePreHandler: sending fingerprint of our pubkey on request="+pubKeyLocalFingerprint)
@@ -204,20 +232,36 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     }
   }
   
-  def relayReceiveEncryptionFailed(remoteKeyFingerprint:String) {
-    // remote public key not found in filesystem after evaluating received fingerprint
+  /**
+   * storeRemotePublicKey todo ?
+   */
+  def storeRemotePublicKey(keyName:String, keystring:String) {
+    Tools.writeToFile(keyFolderPath+"/"+keyName+".pub", keystring)
   }
 
+  /**
+   * relayReceiveEncryptionFailed will be called after the received fingerprint has been evaluated
+   * and not matching public key was not found in the local filesystem 
+   */
+  def relayReceiveEncryptionFailed(remoteKeyFingerprint:String) {
+    log("relayReceiveEncryptionFailed failed to load key for remote key fingerprint='"+remoteKeyFingerprint+"'")
+  }
+
+  /**
+   * p2pReceiveHandler is called for receiving and processing of decrypted data strings from the other client
+   * data that was sent directly per UDP - or relayed per TCP (relayBasedP2pCommunication=true)
+   * if relayBasedP2pCommunication is NOT set, we may use this to disconnect from the relay connection
+   */
   override def p2pReceiveHandler(str:String, host:String, port:Int) {
-    // here we receive and process decrypted data strings from the other client
-    // sent directly per UDP - or relayed per TCP if relayBasedP2pCommunication is set
-    // if relayBasedP2pCommunication is not set, we may disconnect the relay connection now 
     log("p2pReceiveHandler decryptString='"+str+"'")
   }
 
+  /**
+   * relayReceiveHandler is NOT used in p2p mode; instead all received data goes to p2pReceiveHandler
+   * exception: if the relay link is being used as a udp-fallback (relayBasedP2pCommunication=true)
+   * a base64 encoded P2pCore.Message will be received here and will be forwarded to p2pReceiveMultiplexHandler
+   */
   override def relayReceiveHandler(str:String) {
-    // this is not being used in p2p mode: all data goes to p2pReceiveHandler (even if relayed as a fallback)
-    // except if relayBasedP2pCommunication is set (that is: if direct-p2p failed due to firewalls)
     if(relayBasedP2pCommunication) {
       val p2pCoreMessage = Base64.decode(str)
       val protoMultiplex = P2pCore.Message.parseFrom(p2pCoreMessage)
@@ -225,15 +269,14 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       return
     }
 
-    log("relayReceiveHandler !relayBasedP2pComm str='"+str+"' pubKeyRemote="+pubKeyRemote+" UNEXP IN P2P MODE ###########")
+    log("relayReceiveHandler !relayBasedP2pComm str='"+str+"' pubKeyRemote="+pubKeyRemote+" UNEXPECTED IN P2P APP ###########")
   }
 
-  def storeRemotePublicKey(keyName:String, keystring:String) {
-    Tools.writeToFile(keyFolderPath+"/"+keyName+".pub", keystring)
-  }
-
+  /**
+   * p2pEncryptedCommunication is being called when p2p connection has been 
+   * established and encryption has been enabled 
+   */ 
   def p2pEncryptedCommunication() {
-    // we are now p2p connected and encryption is enabled
     log("p2pEncryptedCommunication...")
     for(i <- 0 until 3) {
       val unencryptedMessage = "hello "+i  // maxSize of unencrypted string ~128 bytes (?)

@@ -106,7 +106,7 @@ Rendesvouz string matching can be used as an alternative to fingerprint matching
     ./run timur.p2pCore.P2pEncrypt keysAlice - rendesvouz
     ./run timur.p2pCore.P2pEncrypt keysBob - rendesvouz
     
-In this case, P2pEncrypt requires three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a unique matching string. Both clients need to enter the exact same string, in order to get mached. The advantage of using random Rendesvouz strings for matching, is that the relay server will not see any key fingerprints and therefor has no means to identify who is sending the request.
+In this case, P2pEncrypt requires three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a unique matching string. Both clients need to enter the exact same string, in order to get matched. The advantage of using random Rendesvouz strings for matching, is that the relay server will not see any key fingerprints and therefor has no means to identify who is sending the request. 
 
     P2pEncrypt fullLocalKeyName=keysBob/key.pub used for fingerprint matching
     P2pEncrypt matching clients with rendezvous string 'rendesvouz'
@@ -124,7 +124,7 @@ In this case, P2pEncrypt requires three arguments: 1. the name of the folder con
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Fingerprints are exchanged as soon as the direct p2p link becomes available and are immediately being used to fetch the corresponding public keys, required to start back to back encryption with the other party.
+Key fingerprints are exchanged as soon as the direct p2p link becomes available. The fingerprints are then immediately used to fetch the corresponding remote public keys, which are required for two way end-to-end encryption.
 
 
 More info
@@ -144,19 +144,19 @@ The commons-codec-1.6.jar library is being used to encode and decode Base64 form
 
 ### getjars
 
-The `getjars` script file is provided to document how the binary jar files can being fetched from their source.
+The `getjars` script file is provided to document how the binary jar files can be fetched from their original source.
 
 ### RSA key files
 
-Two folders `keysAlice` and `keysBob` are provided for testing purposes. Both folders contain one individual RSA key pair (`key` and `key.pub`) as well as a third file, which is the other parties public key (`alice.pub` or `bob.pub`).
+Two folders `keysAlice` and `keysBob` are provided for testing purposes. Both folders contain one individual RSA key pair (`key` and `key.pub`) as well as a third file, which is the other parties public key (`keysAlice/bob.pub` and `keysBob/alice.pub`).
 
 ### relaykey.pub
 
-A special `relaykey.pub` is provided which contains the public key of the relay server. Unsing this key, a P2pCore client may encrypt it's communication with a relay server, for instance to hide rendesvouz strings or key fingerprints, used to match two clients, from 3rd parties.
+A special `relaykey.pub` is provided which contains the relay servers public key. A P2pCore client can encrypt it's communication with a relay server using this key. The purpose is to hide it's communication (rendesvouz strings or key fingerprints) from any 3rd party eyes.
 
 ### The role of the relay server
 
-Like any peer-to-peer client solutions, P2pCore requires some minimal 3rd-party support in order for two clients to be able to connect each other. The P2pCore relay server provides clients with a TCP relay service (port 18771) and an UDP echo service (port 18775). The P2pCore relay server does not mandate the use of any user accounts. The P2pCore relay server can be compared to a webserver, providing it's services without knowing it's users. P2pCore clients usually disconnect from the relay server as soon as a peer-to-peer connection has been established.
+Like any peer-to-peer client solutions, P2pCore requires some amount of 3rd-party support, in order for two clients to connect to each other. The P2pCore relay server provides clients with a TCP relay service (port 18771) and a UDP echo service (port 18775). The kind of support the clients get from relay server is really the most minimal possible. Relay server does not mandate the use of user accounts or some other personal information. Relay server can be compared to a webserver, providing it's services without knowing who is using them. P2pCore clients usually disconnect from the relay server as soon as their peer-to-peer connection has been established. Clients have the option to use the relay functionality for full session communication purposes, if no direct connection can be established, due to firewall restrictions.
 
 
 License
@@ -164,7 +164,10 @@ License
 
 Source code is licensed under the GNU General Public License, Version 3
 
+See `LICENSE` file.
+
 Copyright (C) 2012 timur.mehrvarz@gmail.com
+
 
 3rd party libraries being used:
 

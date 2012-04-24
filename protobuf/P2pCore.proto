@@ -17,7 +17,7 @@ option java_outer_classname = "P2pCore";
 option optimize_for = LITE_RUNTIME;
 
 message Message {
-  required string command     = 1;  // "string"
+  required string command     = 1;  // "string", "rsastr"
   optional int64  msgId       = 2;
   optional int64  msgLength   = 3;
   optional string msgString   = 4;
