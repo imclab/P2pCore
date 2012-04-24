@@ -41,23 +41,26 @@ Frameworks need to be embedded in applications to become 'alive'. The P2pCore fr
 
 ### RelayBase
 
+RelayBase will establish a communication link with another instance of RelayBase by routing all communication through a relay server. RelayBase can be executed without arguments:
+
     ./run timur.p2pCore.RelayBase
   
-RelayBase can be executed without arguments. RelayBase will establish communication with another instance of RelayBase by routing all communication through a relay server. RelayBase implements two methods and has only a dozen lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. This is what is being displayed in the console, when looking at one of the two instances:
+The RelayBase class only implements two methods and only has a 10-15 lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. The two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. This is what is being displayed in the console, when looking at one of the two instances:
 
     RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771y
     RelayBase receiveHandler send encrypted initialMsg='...'
     RelayBase connectedThread send='data'
     RelayBase connectedThread finished
     RelayBase receiveMsgHandler 'data'; setting relayQuitFlag
-    
-The two instances match by telling the relay server to connect each other with another instance by the same advertised name 'RelayBase'.
+
 
 ### RelayStress
 
+RelayStress works like RelayBase, but it sends "data" 5000 times before it sends "last" to signal end of communication.
+
     ./run timur.p2pCore.RelayStress
 
-RelayStress works like RelayBase, but it sends "data" 5000 times before it sends "last" to signal end of communication. RelayStress has about 25 lines of code. RelayStress uses a relayed communication path like RelayBase. When you see this in the console, then all 5000 data elements have been send and also 5000 data elements from the other instance have been received:
+RelayStress has only about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. The two clients match by asking the relay server to connect them with another instance by the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
 
     RelayStress relaySocket.getLocalPort=51626 relayServer=109.74.203.226 relayPort=18771
     RelayStress receiveHandler send encrypted initialMsg='...'
@@ -65,13 +68,16 @@ RelayStress works like RelayBase, but it sends "data" 5000 times before it sends
     RelayStress receiveMsgHandler last; relayQuitFlag=false
     RelayStress relayExit outgoingDataCounter=5000 incomingDataCounter=5000
 
-The two clients simply match by telling the relay server to connect them with another instance by the same advertised name 'RelayStress'.
+
+
 
 ### P2pBase
 
+P2pBase works like RelayBase, but instead of using a relay server to route communications, a direct p2p link will be established between the two client instances. 
+
     ./run timur.p2pCore.P2pBase
 
-P2pBase works like RelayBase, but instead of using a relay server to route communications, a direct p2p link will be established between the two client instances. Client ask the relay server to match them with another instance using the same name 'P2pBase'. The relay server is being used only to match the two clients and to help them learn about their public adresses and port numbers. All other communication is happening directly from client to client.
+Client ask the relay server to match them with another instance using the same name 'P2pBase'. The relay server is being used only to match the two clients and to help them learn about their public adresses and port numbers. All other communication is happening directly from client to client.
 
     P2pBase relaySocket.getLocalPort=48564 relayServer=109.74.203.226 relayPort=18771
     P2pBase receiveHandler send encrypted initialMsg='...'
@@ -86,10 +92,12 @@ P2pBase works like RelayBase, but instead of using a relay server to route commu
 
 ### P2pEncrypt
 
+P2pEncrypt works like P2pBase, except that all transfered data will be encrypted. 
+
     ./run timur.p2pCore.P2pEncrypt keysAlice bob
     ./run timur.p2pCore.P2pEncrypt keysBob alice
 
-P2pEncrypt works like P2pBase, but all client to client data will be encrypted. In addition, the fingerprint of the selected remote public key is used to match the clients. P2pEncrypt needs two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the public key to which a connection shall be established.
+Mode A: If run as described above, the fingerprints of the given target RSA keys (bob and alice) are being used to match the clients. P2pEncrypt needs two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the public key to which a connection should be established.
 
     P2pEncrypt fullLocalKeyName=keysAlice/key.pub used for fingerprint matching
     P2pEncrypt fullRemoteKeyName=keysAlice/bob.pub used for fingerprint matching
@@ -103,12 +111,12 @@ P2pEncrypt works like P2pBase, but all client to client data will be encrypted. 
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Rendesvouz string matching can be used as an alternative to fingerprint matching:
+Mode B: Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching:
 
     ./run timur.p2pCore.P2pEncrypt keysAlice - rendesvouz
     ./run timur.p2pCore.P2pEncrypt keysBob - rendesvouz
     
-In this case, P2pEncrypt requires three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a unique matching string. Both clients need to enter the exact same string, in order to get matched. The advantage of using random Rendesvouz strings for matching, is that the relay server will not see any key fingerprints and therefor has no means to identify who is sending the request. 
+For this, P2pEncrypt requires three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a unique matching string. Both clients need to enter the exact same string, in order to get matched. The advantage of using random Rendesvouz strings for matching, is that the relay server will not see any key fingerprints and therefor has no means to identify who is sending the request. 
 
     P2pEncrypt fullLocalKeyName=keysBob/key.pub used for fingerprint matching
     P2pEncrypt matching clients with rendezvous string 'rendesvouz'
