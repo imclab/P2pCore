@@ -56,19 +56,17 @@ The [RelayBase](blob/master/src/RelayBase.scala) class implements two methods in
 
 ### RelayStress
 
-RelayStress works like RelayBase, but it sends "data" 5000 times before it sends "last" to signal end of communication.
+RelayStress works like RelayBase, but it sends 5000 "data" strings before it sends "last" to signal the end of communication.
 
     ./run timur.p2pCore.RelayStress
 
-RelayStress has only about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. The two clients match by asking the relay server to connect them with another instance by the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
+The [RelayStress](blob/master/src/RelayStress.scala) class has about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. Two clients match by asking the relay server to connect them with another instance by the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
 
     RelayStress relaySocket.getLocalPort=51626 relayServer=109.74.203.226 relayPort=18771
     RelayStress receiveHandler send encrypted initialMsg='...'
     RelayStress connectString finished sending; relayQuitFlag=false
     RelayStress receiveMsgHandler last; relayQuitFlag=false
     RelayStress relayExit outgoingDataCounter=5000 incomingDataCounter=5000
-
-
 
 
 ### P2pBase
