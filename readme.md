@@ -142,7 +142,7 @@ More info
 
 ### Protobuf
 
-P2pCore makes use of Google Protobuf to package peer-to-peer data. The [protobuf](blob/master/protobuf) folder contains file [P2pCore.proto](blob/master/protobuf/P2pCore.proto) describing the raw transfer format. This file is being used to generate a Java class named [P2pCore.java](blob/master/src/timur/P2pCore.java). This Java class will be used at runtime, to encode and decode binary over-the-wire packages.
+P2pCore makes use of Google Protobuf to package peer-to-peer data. The [protobuf](blob/master/protobuf) folder contains file [P2pCore.proto](blob/master/protobuf/P2pCore.proto) describing the raw transfer format. This file is being used to generate a Java class named [P2pCore.java](blob/master/src/timur/P2pCore.java). This Java class is being used at runtime to encode and decode binary over-the-wire packages.
 
 ### Bouncy Castle
 
