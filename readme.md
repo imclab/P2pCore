@@ -60,7 +60,7 @@ RelayStress works like RelayBase, but it sends 5000 "data" strings before it sen
 
     ./run timur.p2pCore.RelayStress
 
-The [RelayStress](blob/master/src/RelayStress.scala) class has about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. Two clients match by asking the relay server to connect them with another instance by the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
+The [RelayStress](blob/master/src/RelayStress.scala) class implements three methods in about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
 
     RelayStress relaySocket.getLocalPort=51626 relayServer=109.74.203.226 relayPort=18771
     RelayStress receiveHandler send encrypted initialMsg='...'
@@ -95,7 +95,7 @@ P2pEncrypt works like P2pBase, except that all transfered data will be encrypted
     ./run timur.p2pCore.P2pEncrypt keysAlice bob
     ./run timur.p2pCore.P2pEncrypt keysBob alice
 
-Mode A: If run as described above, the fingerprints of the given target RSA keys (bob and alice) are being used to match the clients. P2pEncrypt needs two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the public key to which a connection should be established.
+Mode A: Run P2pEncrypt with two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the target key, to which a connection shall be established. If run this way, the fingerprints of the given target keys (bob and alice) are being used to match the two clients (alice is looking for bob, bob is looking for alice).
 
     P2pEncrypt fullLocalKeyName=keysAlice/key.pub used for fingerprint matching
     P2pEncrypt fullRemoteKeyName=keysAlice/bob.pub used for fingerprint matching
@@ -109,12 +109,12 @@ Mode A: If run as described above, the fingerprints of the given target RSA keys
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Mode B: Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching:
+Mode B: Run P2pEncrypt with three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a random string. Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching:
 
     ./run timur.p2pCore.P2pEncrypt keysAlice - rendesvouz
     ./run timur.p2pCore.P2pEncrypt keysBob - rendesvouz
     
-For this, P2pEncrypt requires three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a unique matching string. Both clients need to enter the exact same string, in order to get matched. The advantage of using random Rendesvouz strings for matching, is that the relay server will not see any key fingerprints and therefor has no means to identify who is sending the request. 
+In order to get matched, both clients must use the exact same string. The idea behind random string matching is, that the relay server will not see any client specific information (such as key fingerprints) and therefor has no means to identify who is sending the request. Key fingerprints are then exchanged between the clients, as soon as a direct p2p link becomes available. The fingerprints are immediately used to find and load the corresponding complete public keys, which is then used for end-to-end encryption. Here is Bob's session log:
 
     P2pEncrypt fullLocalKeyName=keysBob/key.pub used for fingerprint matching
     P2pEncrypt matching clients with rendezvous string 'rendesvouz'
@@ -132,7 +132,7 @@ For this, P2pEncrypt requires three arguments: 1. the name of the folder contain
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Key fingerprints are exchanged as soon as the direct p2p link becomes available. The fingerprints are then immediately used to fetch the corresponding remote public keys, which are required for two way end-to-end encryption.
+
 
 
 More info
