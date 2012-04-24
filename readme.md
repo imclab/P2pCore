@@ -4,6 +4,7 @@ P2pCore - A portable peer-to-peer framework
 P2pCore is a portable peer-to-peer framework written in Scala. It enables end-to-end RSA-encrypted direct datagram socket communication for devices located behind (different) firewalls. "UDP hole punching" as described here http://www.brynosaurus.com/pub/net/p2pnat/ has been implemented for this purpose. One important objective was to enable remote parties to communicate with each other, without them being required to login to any service. As a result, no username, password, account, etc. is required to use this framework. P2pCore is very portable. It is our goal to use this framework in Gnome/GTK environments, as well as for Android projects, for example. Internally, P2pCore uses string messages as well as binary encoded messages on top of Protobuf.
 
 
+
 System requirements
 -------------------
 
