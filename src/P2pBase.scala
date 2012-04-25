@@ -32,6 +32,8 @@ class P2pBase extends RelayTrait {
   @volatile var relayBasedP2pCommunication = false
   @volatile var waitingRelayThread:Thread = null
   @volatile var publicUdpAddrString:String = null
+  @volatile var otherUdpAddrString:String = null
+
 
   override def start() :Int = {
     //log("start appName=["+appName+"] matchSource="+matchSource+" matchTarget="+matchTarget+
@@ -95,8 +97,8 @@ class P2pBase extends RelayTrait {
     p2pSend(msg, udpConnectIpAddr, udpConnectPortInt)
   }
 
+  /** we are now p2p-connected via relay server (tcp) */
   override def connectedThread(connectString:String) {
-    // we are now p2p-connected via relay server (tcp)
 
     /*
       // this code could be used for TCP hole punching (but we don't know how to do this yet)
@@ -189,8 +191,8 @@ class P2pBase extends RelayTrait {
     }
   }
 
+  /** receiving p2p-data indirectly via relay server */
   override def receiveMsgHandler(str:String) {
-    // we receive p2p-data indirectly via relay server
     udpPunchAttempts=0
     udpPunchFaults=0
     if(str.startsWith("udpAddress=")) {
@@ -199,14 +201,14 @@ class P2pBase extends RelayTrait {
       val combindedUdpAddress = str.substring(11)
       log("receiveMsgHandler other peer combindedUdpAddress=["+combindedUdpAddress+"]")
       val tokenArrayOfStrings = combindedUdpAddress.trim split '|'
-      val udpAddressString = tokenArrayOfStrings(0)
-      if(udpAddressString.length>0) {
-        // try to udp-communicate with the other parties external ip:port
+      otherUdpAddrString = tokenArrayOfStrings(0)
+      if(otherUdpAddrString.length>0) {
+        // trying to udp-communicate with the other parties external ip:port
         // todo: implement direct-p2p connect-timeout starting here and now
 
         udpPunchAttempts +=1
         new Thread("datagramSendPublic") { override def run() {
-          val tokenArrayOfStrings2 = udpAddressString split ':'
+          val tokenArrayOfStrings2 = otherUdpAddrString split ':'
           datagramSendThread(tokenArrayOfStrings2(0),new java.lang.Integer(tokenArrayOfStrings2(1)).intValue)
           // if the udp hole was punched, call p2pSendThread
         } }.start
@@ -270,8 +272,8 @@ class P2pBase extends RelayTrait {
     udpConnectPortInt = 0
   }
 
+  /** bringing the p2p connection down (and the relay connection too) */
   def p2pQuit(sendQuit:Boolean=false) = synchronized {
-    // bring the p2p connection down (and the relay connection too)
     if(udpConnectIpAddr!=null) {
       log("p2pQuit p2pQuitFlag="+p2pQuitFlag+" sendQuit="+sendQuit+" udpConnectIpAddr="+udpConnectIpAddr)
       if(sendQuit) {
@@ -294,8 +296,8 @@ class P2pBase extends RelayTrait {
     //log("p2pQuit done")
   }
 
+  /** we now receive data from the other client (via UDP) */
   def p2pReceiveHandler(str:String, host:String, port:Int) {
-    // we now receive data from the other client (via UDP)
     log("p2pReceiveHandler str='"+str+"'")
 
     // disconnect our relay connection (stay connected via direct p2p)
@@ -307,15 +309,15 @@ class P2pBase extends RelayTrait {
     }
   }
 
+  /** we receive data via (or from) the relay server */
   def relayReceiveHandler(str:String) {
-    // we receive data via (or from) the relay server 
     // here in p2p mode, this is not being used: all data goes to p2pReceiveHandler (even if relayed as a fallback)
     // todo: true?
     log("relayReceiveHandler str='"+str+"' UNEXPECTED IN P2P MODE ###########")
   }
 
+  /** we are now p2p connected (if relayBasedP2pCommunication is set, p2p is relayed; else it is direct) */
   def p2pSendThread() {
-    // we are now p2p connected (if relayBasedP2pCommunication is set, p2p is relayed; else it is direct)
     for(i <- 0 until 3) {
       p2pSend("hello "+i, udpConnectIpAddr, udpConnectPortInt)
       try { Thread.sleep(1000); } catch { case ex:Exception => }
@@ -323,8 +325,8 @@ class P2pBase extends RelayTrait {
     p2pQuit(true)
   }
 
+  /** the p2p connection has now ended */
   def p2pExit(ret:Int) { 
-    // the p2p connection has now ended
     log("p2pExit ret="+ret)
     System.exit(ret)  // todo: in some cases one client process does not exit
   }

@@ -180,8 +180,8 @@ trait RelayTrait {
     }
   }
 
+  /** bring the relay connection down */
   def relayQuit() {
-    // bring the relay connection down
     //log("relayQuit relayQuitFlag="+relayQuitFlag+" relaySocket="+relaySocket)
     relayQuitFlag = true
     if(relaySocket!=null)
