@@ -8,7 +8,7 @@ P2pCore is a portable peer-to-peer framework written in Scala. It enables end-to
 System requirements
 -------------------
 
-To run (and build) this, the following 3rd party software packages needs to be installed: Scala 2.9.x, JDK 6 and Ant.
+To run (and build) this, the following 3rd party software packages needs to be installed: Scala 2.9.x, OpenJDK 6 and Ant.
 
 On Ubuntu 12.04, for example, you would install:
 
@@ -45,7 +45,7 @@ RelayBase will establish a communication link with another instance of RelayBase
 
     ./run timur.p2pCore.RelayBase
   
-The [RelayBase](blob/master/src/RelayBase.scala) class implements two methods in only 10-15 lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. The two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. This is what is being displayed in the console, when looking at one of the two instances:
+The [RelayBase](P2pCore/blob/master/src/RelayBase.scala) class implements two methods in only 10-15 lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. The two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. This is what is being displayed in the console, when looking at one of the two instances:
 
     RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771y
     RelayBase receiveHandler send encrypted initialMsg='...'
@@ -60,7 +60,7 @@ RelayStress works like RelayBase, but it sends 5000 "data" strings before it sen
 
     ./run timur.p2pCore.RelayStress
 
-The [RelayStress](blob/master/src/RelayStress.scala) class implements three methods in about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
+The [RelayStress](P2pCore/blob/master/src/RelayStress.scala) class implements three methods in about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
 
     RelayStress relaySocket.getLocalPort=51626 relayServer=109.74.203.226 relayPort=18771
     RelayStress receiveHandler send encrypted initialMsg='...'
@@ -140,11 +140,11 @@ More info
 
 ### Protobuf
 
-P2pCore makes use of Google Protobuf to package peer-to-peer data. The [protobuf](blob/master/protobuf) folder contains file [P2pCore.proto](blob/master/protobuf/P2pCore.proto) describing the raw transfer format. This file is being used to generate a Java class named [P2pCore.java](blob/master/src/timur/P2pCore.java). This Java class is being used at runtime to encode and decode binary over-the-wire packages.
+P2pCore makes use of Google Protobuf to package peer-to-peer data. The [protobuf](P2pCore/blob/master/protobuf) folder contains file [P2pCore.proto](P2pCore/blob/master/protobuf/P2pCore.proto) describing the raw transfer format. This file is being used to generate a Java class named [P2pCore.java](P2pCore/blob/master/src/timur/P2pCore.java). This Java class is being used at runtime to encode and decode binary over-the-wire packages.
 
 ### Bouncy Castle
 
-P2pCore makes use of Bouncy Castle to encrypt and decrypt using RSA cipher. In order for the default `bcprov-jdk15on-147.jar` library to be usable on Android OS, the default Java namespace `org.bouncycastle.*` was changed to `ext.org.bouncycastle.*` using the JarJar tool. The [bouncy-jarjar](blob/master/bouncy-jarjar) folder contains all info about this process.
+P2pCore makes use of Bouncy Castle to encrypt and decrypt using RSA cipher. In order for the default `bcprov-jdk15on-147.jar` library to be usable on Android OS, the default Java namespace `org.bouncycastle.*` was changed to `ext.org.bouncycastle.*` using the JarJar tool. The [bouncy-jarjar](P2pCore/blob/master/bouncy-jarjar) folder contains all info about this process.
 
 ### Apache commons-codec
 
@@ -152,7 +152,7 @@ The commons-codec-1.6.jar library is being used to encode and decode Base64 form
 
 ### getjars
 
-The [getjars](blob/master/getjars) script file is provided to document how the binary jar files can be fetched from their original source.
+The [getjars](P2pCore/blob/master/getjars) script file is provided to document how the binary jar files can be fetched from their original source.
 
 ### RSA key files
 
@@ -160,7 +160,7 @@ Two folders `keysAlice` and `keysBob` are provided for testing purposes. Both fo
 
 ### relaykey.pub
 
-A special [relaykey.pub](blob/master/relaykey.pub) is provided which contains the relay servers public RSA key. A P2pCore client can encrypt it's communication towards a relay server using this key. The purpose is to hide this communication (rendesvouz strings or key fingerprints) from 3rd party eyes.
+A special [relaykey.pub](P2pCore/blob/master/relaykey.pub) is provided which contains the relay servers public RSA key. A P2pCore client can encrypt it's communication towards a relay server using this key. The purpose is to hide this communication (rendesvouz strings or key fingerprints) from 3rd party eyes.
 
 ### The role of the relay server
 
@@ -172,7 +172,7 @@ License
 
 Source code is licensed under the GNU General Public License, Version 3
 
-See [LICENSE](blob/master/LICENSE).
+See [LICENSE](P2pCore/blob/master/LICENSE).
 
 Copyright (C) 2012 timur.mehrvarz@gmail.com
 

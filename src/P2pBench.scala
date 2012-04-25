@@ -78,7 +78,7 @@ class P2pBench extends P2pBase {
       showStatistics(str)
       send(endConfirmString)
       try { Thread.sleep(500); } catch { case ex:Exception => }
-      p2pQuit
+      p2pQuit(true)
 
     } else {
       log("relayReceiveHandler str=["+str+"] incomingDataCounter="+incomingDataCounter+" unexpected ###########")

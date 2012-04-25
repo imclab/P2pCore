@@ -45,7 +45,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
   }
 
   /**
-   * init is being used to prepare org.bouncycastle.crypto.encodings.PKCS1Encoding in RsaEncrypt/RsaDecrypt
+   * prepare org.bouncycastle.crypto.encodings.PKCS1Encoding in RsaEncrypt/RsaDecrypt
    */
   def init() {
     Security.addProvider(new ext.org.bouncycastle.jce.provider.BouncyCastleProvider())
@@ -217,7 +217,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       if(pubKeyRemote==null) {
         log("p2pReceivePreHandler: not found stored pubKeyRemote - abort session")
         p2pQuitFlag = true
-        p2pQuit
+        p2pQuit(true)
         relayReceiveEncryptionFailed(remoteKeyFingerprint)
         return
       }
@@ -284,7 +284,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
       p2pSend(encryptedMessage, udpConnectIpAddr, udpConnectPortInt, "rsastr")
       try { Thread.sleep(1000); } catch { case ex:Exception => }
     }
-    p2pQuit
+    p2pQuit(true)
   }
 }
 

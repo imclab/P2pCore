@@ -77,6 +77,7 @@ trait RelayTrait {
       }
     }
 
+    log("RelayTrait socketInReader.readLine done -> relayQuit")
     try {
       socketInReader.close
       socketOutWriter.close
@@ -87,9 +88,11 @@ trait RelayTrait {
         logEx("relayQuit "+ex)
     }
 
+    log("RelayTrait socketInReader.readLine done -> relayExit")
     relayExit
     if(throwEx!=null)
       throw throwEx
+    log("RelayTrait socketInReader.readLine finished")
     return 0
   }
 
@@ -100,8 +103,6 @@ trait RelayTrait {
   }
 
   def logEx(str:String) {
-    //val dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance.getTime)
-    //println(dateTime+" "+appName+" exception "+str+" ######")
     log("exception "+str+" ######")
   }
 
@@ -155,11 +156,16 @@ trait RelayTrait {
       } else if(commserverString.startsWith("connect=")) {    // may be better named "connected=..."
         val connectString = commserverString.substring(8) 
         verifyRelay
-        new Thread("senddata") { override def run() { connectedThread(connectString) } }.start
+        new Thread("senddata") { override def run() { 
+          connectedThread(connectString) 
+          log("receiveHandler connectedThread() done")
+        } }.start
 
       } else if(commserverString.startsWith("disconnect")) {
-        log("receiveHandler 'disconnect' -> set relayQuitFlag")
-        relayQuitFlag = true
+        //log("receiveHandler 'disconnect' -> set relayQuitFlag")
+        //relayQuitFlag = true
+        log("receiveHandler 'disconnect' -> relayQuit")
+        relayQuit
       }
 
     } else {
@@ -177,11 +183,11 @@ trait RelayTrait {
 
   def relayQuit() {
     // bring the relay connection down
-    if(relaySocket!=null) {
-      relayQuitFlag = true
+    log("relayQuit relayQuitFlag="+relayQuitFlag+" relaySocket="+relaySocket)
+    relayQuitFlag = true
+    if(relaySocket!=null)
       relaySocket.close
-      relaySocket=null
-    }
+    relaySocket=null
   }
 
   def initHostPubKey() {
