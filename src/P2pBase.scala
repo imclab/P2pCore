@@ -43,18 +43,15 @@ class P2pBase extends RelayTrait {
     if(udpConnectIpAddr!=null && !p2pQuitFlag) {
       log("P2pBase keep running until p2pQuitFlag...")
       waitingRelayThread = Thread.currentThread
-      // todo: instead of Thread.sleep() we can probably just say: waitingRelayThread.wait
-      while(!p2pQuitFlag) {
-        try { Thread.sleep(300000); } catch { case ex:Exception => /* p2pQuitFlag=true */ }
-      }
+      // todo: instead of Thread.sleep() we can probably just say: 
+      waitingRelayThread.wait
+      /*while(!p2pQuitFlag) {
+        try { Thread.sleep(300000); } catch { case ex:Exception => }
+      }*/
       waitingRelayThread = null
-    } else {
-      log("P2pBase NOT keep running; udpConnectIpAddr="+udpConnectIpAddr+" p2pQuitFlag="+p2pQuitFlag)
     }
     try { Thread.sleep(500); } catch { case ex:Exception => }
-    log("P2pBase finished -> p2pExit")
     p2pExit(ret)
-    log("P2pBase finished ret="+ret)
     return ret
   }
 
@@ -166,7 +163,7 @@ class P2pBase extends RelayTrait {
           p2pQuitFlag=true
       }
     }
-    log("connectedThread done")
+    //log("connectedThread done")
   }
   
   def p2pReceiveMultiplexHandler(protoMultiplex:P2pCore.Message) {
@@ -273,39 +270,32 @@ class P2pBase extends RelayTrait {
   }
 
   def p2pReset() {
-    //p2pSocket = null
     udpConnectIpAddr = null
     udpConnectPortInt = 0
   }
 
   def p2pQuit(sendQuit:Boolean=false) = synchronized {
     // bring the p2p connection down (and the relay connection too)
-    log("p2pQuit p2pQuitFlag="+p2pQuitFlag+" sendQuit="+sendQuit+" udpConnectIpAddr="+udpConnectIpAddr)
     if(udpConnectIpAddr!=null) {
+      log("p2pQuit p2pQuitFlag="+p2pQuitFlag+" sendQuit="+sendQuit+" udpConnectIpAddr="+udpConnectIpAddr)
       if(sendQuit) {
         try {
-          // tell the other side we are gone
+          // say bye bye to remote client
           p2pSend("quit", udpConnectIpAddr,udpConnectPortInt)
         } catch {
           case ex:Exception =>
             logEx("p2pQuit ex="+ex.getMessage)
         }
-        log("p2pQuit sendQuit done")
+        //log("p2pQuit sendQuit done")
       }
     }
     relayBasedP2pCommunication = false
     p2pQuitFlag = true
     p2pReset
-
-    log("p2pQuit -> relayQuit")
     relayQuit
-    log("p2pQuit relayQuit done")
-
-    if(waitingRelayThread!=null) {
-      log("p2pQuit waitingRelayThread.interrupt")
+    if(waitingRelayThread!=null)
       waitingRelayThread.interrupt
-    }
-    log("p2pQuit done")
+    //log("p2pQuit done")
   }
 
   def p2pReceiveHandler(str:String, host:String, port:Int) {

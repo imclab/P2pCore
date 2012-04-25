@@ -77,7 +77,7 @@ trait RelayTrait {
       }
     }
 
-    log("RelayTrait socketInReader.readLine done -> relayQuit")
+    //log("RelayTrait socketInReader.readLine done -> relayQuit")
     try {
       socketInReader.close
       socketOutWriter.close
@@ -88,11 +88,11 @@ trait RelayTrait {
         logEx("relayQuit "+ex)
     }
 
-    log("RelayTrait socketInReader.readLine done -> relayExit")
+    //log("RelayTrait socketInReader.readLine done -> relayExit")
     relayExit
     if(throwEx!=null)
       throw throwEx
-    log("RelayTrait socketInReader.readLine finished")
+    //log("RelayTrait socketInReader.readLine finished")
     return 0
   }
 
@@ -158,14 +158,13 @@ trait RelayTrait {
         verifyRelay
         new Thread("senddata") { override def run() { 
           connectedThread(connectString) 
-          log("receiveHandler connectedThread() done")
         } }.start
 
       } else if(commserverString.startsWith("disconnect")) {
-        //log("receiveHandler 'disconnect' -> set relayQuitFlag")
-        //relayQuitFlag = true
-        log("receiveHandler 'disconnect' -> relayQuit")
-        relayQuit
+        log("receiveHandler 'disconnect' -> set relayQuitFlag")
+        relayQuitFlag = true
+        //log("receiveHandler 'disconnect' -> relayQuit")
+        //relayQuit
       }
 
     } else {
@@ -183,7 +182,7 @@ trait RelayTrait {
 
   def relayQuit() {
     // bring the relay connection down
-    log("relayQuit relayQuitFlag="+relayQuitFlag+" relaySocket="+relaySocket)
+    //log("relayQuit relayQuitFlag="+relayQuitFlag+" relaySocket="+relaySocket)
     relayQuitFlag = true
     if(relaySocket!=null)
       relaySocket.close
