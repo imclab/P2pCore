@@ -41,11 +41,14 @@ Frameworks need to be embedded in applications to become 'alive'. The P2pCore fr
 
 ### RelayBase
 
-RelayBase will establish a communication link with another instance of RelayBase by routing all communication through a relay server. RelayBase can be executed without arguments:
+RelayBase will establish a communication link with another instance of RelayBase by routing all communication through a relay server. Two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. The [RelayBase](P2pCore/blob/master/src/RelayBase.scala) class implements two methods in 15 lines of code. `connectedThread()` is called when a p2p connection has been established. `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. 
+
+RelayBase can be executed without arguments.
 
     ./run timur.p2pCore.RelayBase
+    ./run timur.p2pCore.RelayBase
   
-The [RelayBase](P2pCore/blob/master/src/RelayBase.scala) class implements two methods in only 10-15 lines of code. Method 1: `connectedThread()` is called when a p2p connection has been established. Here a single call to `send("data")` is placed. Method 2: `receiveMsgHandler(str:String)` is called when a string message arrives from the other client. If the string message is "data", the application terminates. The two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. This is what is being displayed in the console, when looking at one of the two instances:
+This is what is shown in the console, when looking at one of the two instances:
 
     RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771y
     RelayBase receiveHandler send encrypted initialMsg='...'
@@ -56,11 +59,14 @@ The [RelayBase](P2pCore/blob/master/src/RelayBase.scala) class implements two me
 
 ### RelayStress
 
-RelayStress works like RelayBase, but it sends 5000 "data" strings before it sends "last" to signal the end of communication.
+RelayStress uses a relayed communication path, just like RelayBase. But it will send 5000 "data" strings before it sends "last" to signal the end of communication. The [RelayStress](P2pCore/blob/master/src/RelayStress.scala) class implements three methods in about 25 lines of code. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'.
+
+RelayStress can be executed without arguments:
 
     ./run timur.p2pCore.RelayStress
+    ./run timur.p2pCore.RelayStress
 
-The [RelayStress](P2pCore/blob/master/src/RelayStress.scala) class implements three methods in about 25 lines of code. RelayStress uses a relayed communication path, just like RelayBase. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'. When you see this in the console, then all 5000 data elements have been send and 5000 data elements from the other instance have been received:
+A console log showing that all 5000 data elements have been sent and another 5000 data elements from the remote client have been received:
 
     RelayStress relaySocket.getLocalPort=51626 relayServer=109.74.203.226 relayPort=18771
     RelayStress receiveHandler send encrypted initialMsg='...'
@@ -71,11 +77,14 @@ The [RelayStress](P2pCore/blob/master/src/RelayStress.scala) class implements th
 
 ### P2pBase
 
-P2pBase works like RelayBase, but instead of using a relay server to route communications, a direct p2p link will be established between the two client instances. 
+P2pBase works like RelayBase, but it will establish a direct p2p link between two clients. The [P2pBase](P2pCore/blob/master/src/P2pBase.scala) class implements 15 methods in about 300 lines of code. P2pBase clients will ask the relay server to match them with another instance of the same name. The relay server will be used only to match clients and help them learn about their public adresses and port numbers. All other communication will take place directly between the clients.
+
+P2pBase can be executed without arguments:
 
     ./run timur.p2pCore.P2pBase
+    ./run timur.p2pCore.P2pBase
 
-Client ask the relay server to match them with another instance using the same name 'P2pBase'. The relay server is being used only to match the two clients and to help them learn about their public adresses and port numbers. All other communication is happening directly from client to client.
+This is what is shown in the console, when looking at one of the two instances:
 
     P2pBase relaySocket.getLocalPort=48564 relayServer=109.74.203.226 relayPort=18771
     P2pBase receiveHandler send encrypted initialMsg='...'
@@ -92,10 +101,12 @@ Client ask the relay server to match them with another instance using the same n
 
 P2pEncrypt works like P2pBase, except that all transfered data will be encrypted. 
 
+Type-A: Run P2pEncrypt with two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the target key, to which a connection shall be established. If run this way, the fingerprints of the given target keys (bob and alice) are being used to match the two clients (alice is looking for bob, bob is looking for alice).
+
     ./run timur.p2pCore.P2pEncrypt keysAlice bob
     ./run timur.p2pCore.P2pEncrypt keysBob alice
 
-Mode A: Run P2pEncrypt with two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the target key, to which a connection shall be established. If run this way, the fingerprints of the given target keys (bob and alice) are being used to match the two clients (alice is looking for bob, bob is looking for alice).
+Here is Alice's Type-A session log:
 
     P2pEncrypt fullLocalKeyName=keysAlice/key.pub used for fingerprint matching
     P2pEncrypt fullRemoteKeyName=keysAlice/bob.pub used for fingerprint matching
@@ -109,12 +120,12 @@ Mode A: Run P2pEncrypt with two arguments: 1. the name of the folder containing 
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-Mode B: Run P2pEncrypt with three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a random string. Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching:
+Type-B: Run P2pEncrypt with three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a random string. Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching. In order to get matched, both clients must use the exact same string. The idea behind random string matching is to hide all client specific information (such as key fingerprints) from the relay server. Key fingerprints are only exchanged between clients over the direct p2p link. Incoming fingerprints are used to load the corresponding public keys, which are used for end-to-end encryption. 
 
     ./run timur.p2pCore.P2pEncrypt keysAlice - rendesvouz
     ./run timur.p2pCore.P2pEncrypt keysBob - rendesvouz
-    
-In order to get matched, both clients must use the exact same string. The idea behind random string matching is, that the relay server will not see any client specific information (such as key fingerprints) and therefor has no means to identify who is sending the request. Key fingerprints are then exchanged between the clients, as soon as a direct p2p link becomes available. The fingerprints are immediately used to find and load the corresponding complete public keys, which is then used for end-to-end encryption. Here is Bob's session log:
+
+Here is Bob's Type-B session log:
 
     P2pEncrypt fullLocalKeyName=keysBob/key.pub used for fingerprint matching
     P2pEncrypt matching clients with rendezvous string 'rendesvouz'
@@ -131,8 +142,6 @@ In order to get matched, both clients must use the exact same string. The idea b
     P2pEncrypt p2pReceiveHandler decryptString='hello 0'
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
-
-
 
 
 More info
