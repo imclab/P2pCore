@@ -43,7 +43,7 @@ Frameworks need to be embedded in applications to become 'alive'. The P2pCore fr
 
 ### RelayBase
 
-RelayBase will establish a communication link with another instance of RelayBase by routing all communication through a relay server. Two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. The [RelayBase](P2pCore/blob/master/src/RelayBase.scala) class implements two methods in 15 lines of code. `connectedThread()` is called when a p2p connection has been established. `receiveMsgHandler()` is called when a string message arrives from the other client. If the string message is "data", the application terminates. RelayBase can be executed without arguments:
+[RelayBase](P2pCore/blob/master/src/RelayBase.scala) will establish a communication link with another instance of RelayBase by routing all communication through a relay server. Two instances match by asking the relay server to connect them with another instance by the same advertised name 'RelayBase'. RelayBase can be executed without arguments:
 
     ./run timur.p2pCore.RelayBase
     ./run timur.p2pCore.RelayBase
@@ -59,7 +59,7 @@ This is what is shown in the console, when looking at one of the two instances:
 
 ### RelayStress
 
-RelayStress uses a relayed communication path, just like RelayBase. But it will send 5000 "data" strings before it sends "last" to signal the end of communication. The [RelayStress](P2pCore/blob/master/src/RelayStress.scala) class implements three methods in about 25 lines of code. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'. RelayStress can be executed without arguments:
+[RelayStress](P2pCore/blob/master/src/RelayStress.scala) uses a relayed communication path, just like RelayBase. It will send 5000 "data" strings instead of three, before it will send "last" to signal the end of communication. Two clients match by asking the relay server to connect them with another instance of the same advertised name 'RelayStress'. RelayStress can be executed without arguments:
 
     ./run timur.p2pCore.RelayStress
     ./run timur.p2pCore.RelayStress
@@ -75,7 +75,7 @@ A console log showing that all 5000 data elements have been sent and another 500
 
 ### P2pBase
 
-P2pBase works like RelayBase, but it will establish a direct p2p link between two clients. The [P2pBase](P2pCore/blob/master/src/P2pBase.scala) class implements 15 methods in about 300 lines of code. P2pBase clients will ask the relay server to match them with another instance of the same name. The relay server will be used only to match clients and help them learn about their public adresses and port numbers. All other communication will take place directly between the clients. P2pBase can be executed without arguments:
+[P2pBase](P2pCore/blob/master/src/P2pBase.scala) works like RelayBase, but it will establish a direct p2p link between two clients. P2pBase clients will ask the relay server to match them with another instance of the same name. The relay server will be used only to match clients and help them learn about their public adresses and port numbers. All other communication will take place directly between the clients. P2pBase can be executed without arguments:
 
     ./run timur.p2pCore.P2pBase
     ./run timur.p2pCore.P2pBase
@@ -95,14 +95,14 @@ This is what is shown in the console, when looking at one of the two instances:
 
 ### P2pEncrypt
 
-P2pEncrypt works like P2pBase, except that all transfered data will be encrypted. P2pEncrypt needs to be extecuted with two or three arguments
+[P2pEncrypt](P2pCore/blob/master/src/P2pEncrypt.scala) works like P2pBase, except that all transfered data will be encrypted. P2pEncrypt may be extecuted with two or three arguments.
 
-P2pEncrypt run with two arguments: 1. the name of the folder containing the remote public keys. And 2. the name of the target key, to which a connection shall be established. If run this way, the fingerprints of the given target keys (bob and alice) are being used to match the two clients (alice is looking for bob, bob is looking for alice). 
+A) When run with two arguments: 1. the name of the folder containing the remote public keys and 2. the name of the target key, to which a connection shall be established. If run this way, the fingerprints of the given target keys (bob and alice) are being used to match the two clients (alice is looking for bob, bob is looking for alice).
 
     ./run timur.p2pCore.P2pEncrypt keysAlice bob
     ./run timur.p2pCore.P2pEncrypt keysBob alice
 
-Here is Alice's session log:
+Alice's session log when run with two arguments:
 
     P2pEncrypt fullLocalKeyName=keysAlice/key.pub used for fingerprint matching
     P2pEncrypt fullRemoteKeyN.ame=keysAlice/bob.pub used for fingerprint matching
@@ -116,12 +116,12 @@ Here is Alice's session log:
     P2pEncrypt p2pReceiveHandler decryptString='hello 1'
     P2pEncrypt p2pReceiveHandler decryptString='hello 2'
 
-P2pEncrypt run with three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a random string. Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching. In order to get matched, both clients must use the exact same string. The idea behind random string matching is to hide all client specific information (such as key fingerprints) from the relay server. Key fingerprints are only exchanged between clients over the direct p2p link. Incoming fingerprints are used to load the corresponding public keys, which are used for end-to-end encryption. 
+B) P2pEncrypt run with three arguments: 1. the name of the folder containing the remote public keys. 2. a dash to indicate that no key shall be used for client matching. 3. a random string. Random string matching (here: "rendesvouz") can be used as an alternative to fingerprint matching. In order to get matched, both clients must use the exact same string. The idea behind random string matching is to hide all client specific information (such as key fingerprints) from the relay server. Key fingerprints are only exchanged between clients over the direct p2p link. Incoming fingerprints are used to load the corresponding public keys, which are used for end-to-end encryption. 
 
     ./run timur.p2pCore.P2pEncrypt keysAlice - rendesvouz
     ./run timur.p2pCore.P2pEncrypt keysBob - rendesvouz
 
-Here is Bob's session log:
+Bob's session log run with three arguments:
 
     P2pEncrypt fullLocalKeyName=keysBob/key.pub used for fingerprint matching
     P2pEncrypt matching clients with rendezvous string 'rendesvouz'
