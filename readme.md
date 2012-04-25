@@ -8,7 +8,7 @@ P2pCore is a portable peer-to-peer framework written in Scala. It enables end-to
 System requirements
 -------------------
 
-To run (and build) this, the following 3rd party software packages needs to be installed: Scala 2.9.x, OpenJDK 6 and Ant.
+To build and run this project, the following 3rd party software packages needs to be installed: Scala 2.9.x, OpenJDK 6 and Ant.
 
 On Ubuntu 12.04, for example, you would install:
 
