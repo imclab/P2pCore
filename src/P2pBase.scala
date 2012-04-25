@@ -39,18 +39,14 @@ class P2pBase extends RelayTrait {
     //    " sendBufferSize="+p2pSocket.getSendBufferSize)
     val ret = super.start
     // the relay connection is now finished
-    // in case the udp connection is still in use, we keep this thread (being the parent of the udp thread) alive
+    // we keep this thread (being the parent of the udp thread) alive, until the udp connection is also finished
     if(udpConnectIpAddr!=null && !p2pQuitFlag) {
       log("P2pBase keep running until p2pQuitFlag...")
       waitingRelayThread = Thread.currentThread
-      // todo: instead of Thread.sleep() we can probably just say: 
-      waitingRelayThread.wait
-      /*while(!p2pQuitFlag) {
-        try { Thread.sleep(300000); } catch { case ex:Exception => }
-      }*/
+      waitingRelayThread synchronized { try { waitingRelayThread.wait } catch { case ex:Exception => } }
       waitingRelayThread = null
     }
-    try { Thread.sleep(500); } catch { case ex:Exception => }
+    try { Thread.sleep(100); } catch { case ex:Exception => }
     p2pExit(ret)
     return ret
   }
@@ -294,13 +290,21 @@ class P2pBase extends RelayTrait {
     p2pReset
     relayQuit
     if(waitingRelayThread!=null)
-      waitingRelayThread.interrupt
+      waitingRelayThread synchronized { waitingRelayThread.interrupt }
     //log("p2pQuit done")
   }
 
   def p2pReceiveHandler(str:String, host:String, port:Int) {
-    // we receive data strings (per UDP) from the other client
+    // we now receive data from the other client (via UDP)
     log("p2pReceiveHandler str='"+str+"'")
+
+    // disconnect our relay connection (stay connected via direct p2p)
+    if(relaySocket!=null && !relayBasedP2pCommunication) {
+      log("relaySocket.close")
+      relayQuitFlag=true
+      relaySocket.close
+      relaySocket=null
+    }
   }
 
   def relayReceiveHandler(str:String) {
