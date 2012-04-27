@@ -335,6 +335,7 @@ class P2pBase extends RelayTrait {
   /** the p2p connection has now ended */
   def p2pExit(ret:Int) { 
     log("p2pExit ret="+ret)
+    println("system.exit")
     System.exit(ret)  // todo: in some cases one client process does not exit
   }
 }
