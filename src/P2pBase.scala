@@ -86,8 +86,15 @@ class P2pBase extends RelayTrait {
         } else if(host!=null && port!=0) {
           //log("p2pSend udp '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
           val sendDatagram = new DatagramPacket(byteData, size, new InetSocketAddress(host, port))
-          p2pSocket.send(sendDatagram)
-          // todo: "java.io.IOException: Operation not permitted" ???
+          try {
+            p2pSocket.send(sendDatagram)
+            // todo: "java.io.IOException: Operation not permitted" ???
+          } catch {
+            case ex:java.io.IOException =>
+              log("p2pSend ex="+ex+" retry...")
+              try { Thread.sleep(700); } catch { case ex:Exception => }
+              p2pSocket.send(sendDatagram)
+          }
         }
       }
     }

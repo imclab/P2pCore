@@ -136,7 +136,7 @@ trait RelayTrait {
         randomId = util.Random.nextInt(100000000)
         // consider encrypt string max-size RsaKeyGenerate.keySize; see also: RsaEncrypt.scala
         val initialMsg = "id="+id+"|core="+appName+","+matchSource+","+matchTarget+",true,false,false,-,direct,null,"+randomId
-        log("receiveHandler send encrypted initialMsg='"+initialMsg+"' initialMsg.length="+initialMsg.length)
+        log("send encrypted initial msg '"+initialMsg) //+" len="+initialMsg.length)
         val encrypted = RsaEncrypt.encrypt(hostPubKey, initialMsg)
         //log("receiveHandler send encrypted=["+encrypted+"]")
         send(encrypted)
