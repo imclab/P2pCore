@@ -256,6 +256,7 @@ class P2pBase extends RelayTrait {
         if(!relayBasedP2pCommunication) {
           p2pReset
           p2pFault(udpPunchAttempts)
+
           log("datagramSendThread p2p via relay server")
           relayBasedP2pCommunication = true
           p2pSendThread
@@ -275,6 +276,7 @@ class P2pBase extends RelayTrait {
   }
 
   def p2pReset() {
+    log("p2pReset")
     udpConnectIpAddr = null
     udpConnectPortInt = 0
   }
@@ -296,7 +298,7 @@ class P2pBase extends RelayTrait {
     }
     relayBasedP2pCommunication = false
     p2pQuitFlag = true
-    p2pReset
+    //p2pReset
     relayQuit
     if(waitingRelayThread!=null)
       waitingRelayThread synchronized { waitingRelayThread.interrupt }
