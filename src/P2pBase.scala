@@ -378,20 +378,20 @@ class P2pBase extends RelayTrait {
           }
         }
       }
-      log("p2pWatchdog done ###########")
+      log("p2pWatchdog exit")
     } }.start
   }
 
   def p2pTimeout() {
-    log("p2pWatchdog TIMEOUT give up ###########")
+    log("p2pWatchdog TIMEOUT give up ####")
     p2pQuit(true)
   }
 
   /** the p2p connection has now ended */
   def p2pExit(ret:Int) { 
     log("p2pExit ret="+ret)
-    println("system.exit")
-    System.exit(ret)  // todo: in some cases one client process does not exit
+    //println("system.exit")
+    //System.exit(ret)  // todo: in some cases one client process does not exit
   }
 }
 
