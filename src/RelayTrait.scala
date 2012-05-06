@@ -42,50 +42,58 @@ trait RelayTrait {
     relaySocket.setReuseAddress(true)
 
     log("relaySocket.getLocalPort="+relaySocket.getLocalPort+" relayServer="+relayServer+" relayPort="+relayPort)
-    relaySocket.connect(new InetSocketAddress(relayServer,relayPort))
-    // may throw java.net.ConnectException: Connection refused
-
-    socketOutWriter = new BufferedWriter(new OutputStreamWriter(relaySocket.getOutputStream))
-    socketInReader = new BufferedReader(new InputStreamReader(relaySocket.getInputStream))
-    send("hello")
-
     var throwEx:Exception = null
-    while(!relayQuitFlag && socketInReader!=null) {
-      try {
-        val msgString = socketInReader.readLine
-        // may throw java.net.ConnectException: Connection refused
-        // may throw java.net.SocketException: recvfrom failed: ETIMEDOUT (Connection timed out)
-
-        if(msgString==null) {
-          log(appName+" socketInReader msgString==null")
-          relayQuitFlag = true
-        }
-        else
-        if(msgString.length>0) {
-          receiveHandler(msgString)
-        }
-
-      } catch {
-        case ex:Exception =>
-          // if not manualy disconencted, this is not an error
-          if(!relayQuitFlag) {
-            throwEx = ex
-            logEx("relay connection disconnected")
-            ex.printStackTrace
-            relayQuitFlag = true
-          }
-      }
+    try {
+      relaySocket.connect(new InetSocketAddress(relayServer,relayPort))
+      // may throw java.net.ConnectException: "Connection refused" or "ENETUNREACH (Network is unreachable)"
+    } catch {
+      case ex:java.net.ConnectException =>
+        throwEx = ex
+        relayQuitFlag = true
+        relayQuit
     }
 
-    //log("RelayTrait socketInReader.readLine done -> relayQuit")
-    try {
-      socketInReader.close
-      socketOutWriter.close
-      relayQuit
+    if(!relayQuitFlag) {
+      socketOutWriter = new BufferedWriter(new OutputStreamWriter(relaySocket.getOutputStream))
+      socketInReader = new BufferedReader(new InputStreamReader(relaySocket.getInputStream))
+      send("hello")
 
-    } catch {
-      case ex:Exception =>
-        logEx("relayQuit "+ex)
+      while(!relayQuitFlag && socketInReader!=null) {
+        try {
+          val msgString = socketInReader.readLine
+          // may throw java.net.ConnectException: Connection refused
+          // may throw java.net.SocketException: recvfrom failed: ETIMEDOUT (Connection timed out)
+
+          if(msgString==null) {
+            log(appName+" socketInReader msgString==null")
+            relayQuitFlag = true
+          }
+          else
+          if(msgString.length>0) {
+            receiveHandler(msgString)
+          }
+
+        } catch {
+          case ex:Exception =>
+            // if not manualy disconencted, this is not an error
+            if(!relayQuitFlag) {
+              throwEx = ex
+              logEx("relay connection disconnected")
+              ex.printStackTrace
+              relayQuitFlag = true
+            }
+        }
+      }
+
+      //log("RelayTrait socketInReader.readLine done -> relayQuit")
+      try {
+        socketInReader.close
+        socketOutWriter.close
+        relayQuit
+      } catch {
+        case ex:Exception =>
+          logEx("relayQuit "+ex)
+      }
     }
 
     //log("RelayTrait socketInReader.readLine done -> relayExit")

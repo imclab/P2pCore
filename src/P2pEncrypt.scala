@@ -135,7 +135,7 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
   /**
    * p2pSendThread is called when a p2p connection was established
    * if relayBasedP2pCommunication is set, p2p is relayed; else it is direct
-   * if pubKeyRemote is not known, a key fingerprint will be requested using "requestPubKeyFingerprint"
+   * if pubKeyRemote is not known, a key fingerprint will be requested using "//requestPubKeyFingerprint"
    * processing will then be forward to p2pEncryptedCommunication
    */
   override def p2pSendThread() {
@@ -147,8 +147,8 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
     } else {
       // remote public key is NOT known, request public key fingerprint, so we can check if we have the key stored already
       log("p2pSendThread requestPubKeyFingerprint...")
-      p2pSend("requestPubKeyFingerprint", udpConnectIpAddr,udpConnectPortInt)    // unencrypted request for pubkey fingerprint
-      // p2pEncryptedCommunication will be called, as soon as we receive "pubKeyFingerprint=..." in p2pReceiveHandler     
+      p2pSend("//requestPubKeyFingerprint", udpConnectIpAddr,udpConnectPortInt)    // unencrypted request for pubkey fingerprint
+      // p2pEncryptedCommunication will be called, as soon as we receive "//pubKeyFingerprint=..." in p2pReceiveHandler     
     }
   }
 
@@ -184,15 +184,15 @@ class P2pEncrypt(keyFolderPath:String, setRemoteKeyName:String, rendezvous:Strin
 
   /**
    * p2pReceivePreHandler is called as soon as p2p data was encrypted
-   * will process special commands, such as "requestPubKeyFingerprint", "pubKeyFingerprint=...", "check", "ack", "quit"
+   * will process special commands, such as "//requestPubKeyFingerprint", "//pubKeyFingerprint=...", "//check", "//ack", "//quit"
    */
   override def p2pReceivePreHandler(str:String) {
-    if(str=="requestPubKeyFingerprint") {
+    if(str=="//requestPubKeyFingerprint") {
       log("p2pReceivePreHandler: sending fingerprint of our pubkey on request="+pubKeyLocalFingerprint)
-      p2pSend("pubKeyFingerprint="+pubKeyLocalFingerprint, udpConnectIpAddr, udpConnectPortInt)
+      p2pSend("//pubKeyFingerprint="+pubKeyLocalFingerprint, udpConnectIpAddr, udpConnectPortInt)
 
-    } else if(str.startsWith("pubKeyFingerprint=")) {
-      val remoteKeyFingerprint = str.substring(18)
+    } else if(str.startsWith("//pubKeyFingerprint=")) {
+      val remoteKeyFingerprint = str.substring(19)
       log("p2pReceivePreHandler: remoteKeyFingerprint="+remoteKeyFingerprint)
 
       // search all stored pub keys for a match to remoteKeyFingerprint
