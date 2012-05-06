@@ -29,11 +29,11 @@ trait RelayTrait {
   var matchSource = appName  // we can be searched by this
   var matchTarget = appName  // what we are searching for
 
-  var relaySocket = new Socket()
-  var socketOutWriter:BufferedWriter = null
-  var socketInReader:BufferedReader = null
-  var hostPubKey:String = null
+  @volatile var relaySocket = new Socket()
+  @volatile var socketOutWriter:BufferedWriter = null
+  @volatile var socketInReader:BufferedReader = null
   @volatile var relayQuitFlag = false
+  var hostPubKey:String = null
   var randomId = 0
   var clientId = ""
 

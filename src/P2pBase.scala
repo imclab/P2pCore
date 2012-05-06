@@ -33,9 +33,9 @@ class P2pBase extends RelayTrait {
   @volatile var waitingRelayThread:Thread = null
   @volatile var publicUdpAddrString:String = null
   @volatile var otherUdpAddrString:String = null
-  @volatile var msgIdSend=0l
-  @volatile var msgMsSend=0l
-  @volatile var msgMsRcv=0l
+  @volatile var msgIdSend = 0l
+  @volatile var msgMsSend = 0l
+  @volatile var msgMsRcv = 0l
 
 
   override def start() :Int = {
@@ -43,9 +43,9 @@ class P2pBase extends RelayTrait {
     //    " receiveBufferSize="+p2pSocket.getReceiveBufferSize+
     //    " sendBufferSize="+p2pSocket.getSendBufferSize)
     val ret = super.start
-    // the relay connection is now finished
-    // we keep this thread (being the parent of the udp thread) alive, until the udp connection is also finished
+    // relay connection is now finished
     if(udpConnectIpAddr!=null && !p2pQuitFlag) {
+      // we keep this thread (being the parent of the udp thread) alive, until the udp connection is also finished
       log("P2pBase keep running until p2pQuitFlag...")
       waitingRelayThread = Thread.currentThread
       waitingRelayThread synchronized { try { waitingRelayThread.wait } catch { case ex:Exception => } }
@@ -209,7 +209,7 @@ class P2pBase extends RelayTrait {
     //log("p2pReceivePreHandler P2pBase reset msgMsRcv; receiving=["+str+"]")
     if(str=="//quit") {
       log("p2pReceivePreHandler received 'quit'")
-      p2pQuitFlag = true
+      //p2pQuitFlag = true
       p2pQuit(false)
 
     } else if(str=="//check") {
@@ -323,7 +323,6 @@ class P2pBase extends RelayTrait {
     }
     relayBasedP2pCommunication = false
     p2pQuitFlag = true
-    //p2pReset
     relayQuit
     if(waitingRelayThread!=null)
       waitingRelayThread synchronized { waitingRelayThread.interrupt }
@@ -338,7 +337,7 @@ class P2pBase extends RelayTrait {
     if(relaySocket!=null && !relayBasedP2pCommunication) {
       log("relaySocket.close")
       relayQuitFlag=true
-      relaySocket.close
+      try { relaySocket.close } catch { case ex:Exception => }
       relaySocket=null
     }
   }
@@ -360,14 +359,16 @@ class P2pBase extends RelayTrait {
     p2pQuit(true)
   }
 
+  /** will check remote client availability */
   def p2pWatchdog() {
     new Thread("p2pWatchdog") { override def run() {
       udpConnectConfirmed = true
       while(!p2pQuitFlag && !relayBasedP2pCommunication) {
         try { Thread.sleep(1000); } catch { case ex:Exception => }
-        // if we didn't receive any p2p data since x seconds, send 'check' to other side, waiting for 'ack'
+        // if we didn't receive any p2p data since 5 seconds, send 'check' to other side, waiting for 'ack'
         if(msgMsRcv+5000<System.currentTimeMillis) {
           if(!udpConnectConfirmed) {
+            // todo: maybe don't give up so quickly
             if(msgMsRcv+10000<System.currentTimeMillis) {
               p2pTimeout
             }
@@ -382,6 +383,7 @@ class P2pBase extends RelayTrait {
     } }.start
   }
 
+  /** remote client does not respond */
   def p2pTimeout() {
     log("p2pWatchdog TIMEOUT give up ####")
     p2pQuit(true)
@@ -390,8 +392,6 @@ class P2pBase extends RelayTrait {
   /** the p2p connection has now ended */
   def p2pExit(ret:Int) { 
     log("p2pExit ret="+ret)
-    //println("system.exit")
-    //System.exit(ret)  // todo: in some cases one client process does not exit
   }
 }
 
