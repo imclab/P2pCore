@@ -218,6 +218,9 @@ class P2pBase extends RelayTrait {
     } else if(str=="//ack") {
       udpConnectConfirmed = true
 
+    } else if(str.startsWith("//")) {
+      log("p2pReceivePreHandler skip '"+str+"' ####")    
+
     } else {
       p2pReceiveHandler(str, udpConnectIpAddr, udpConnectPortInt)
     }
