@@ -50,7 +50,7 @@ Frameworks need to be embedded in applications to become 'alive'. The P2pCore fr
   
 This is what is shown in the console, when looking at one of the two instances:
 
-    RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771y
+    RelayBase relaySocket.getLocalPort=50582 relayServer=109.74.203.226 relayPort=18771
     RelayBase receiveHandler send encrypted initialMsg='...'
     RelayBase connectedThread send='data'
     RelayBase connectedThread finished
