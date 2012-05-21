@@ -82,44 +82,46 @@ class P2pBase extends RelayTrait {
 
     } else {
       // sending data to the other peer
-      msgIdSend += 1
-      msgMsSend = System.currentTimeMillis
-      val p2pCoreMsg = P2pCore.Message.newBuilder
-                              .setCommand(cmd)
-                              .setMsgLength(sendString.length)
-                              .setMsgString(sendString)
-                              .setMsgId(msgIdSend)
-                              .build
-      val size = p2pCoreMsg.getSerializedSize
-      //log("p2pSend p2pCoreMsg.getSerializedSize="+size)
-      if(size>0) {
-        val byteData = p2pCoreMsg.toByteArray
-        // if relayBasedP2pCommunication is set, use send(); else use p2pSocket.send()
-        if(relayBasedP2pCommunication) {
-          log("p2pSend relayed '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
-          send(Base64.encode(byteData))
+      if(relayBasedP2pCommunication) {
+        //log("p2pSend relayed '"+sendString+"'")
+        send(sendString)
 
-        } else if(host!=null && port!=0) {
-          //log("p2pSend udp '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
-          val sendDatagram = new DatagramPacket(byteData, size, new InetSocketAddress(host, port))
-          try {
-            p2pSocket.send(sendDatagram)
-            // todo: "java.io.IOException: Operation not permitted" ???
-          } catch {
-            case ex:java.io.IOException =>
-              // for instance: "ENETUNREACH (Network is unreachable)"
-              // retry...
-              log("p2pSend ex="+ex+" retry...")
-              try { Thread.sleep(700); } catch { case ex:Exception => }
-              // todo: retry may also throw
-              try {
-                p2pSocket.send(sendDatagram)
-              } catch {
-                case ex:java.io.IOException =>
-                  log("p2pSend retry failed ex="+ex)
-                  // todo: how to cope? 
-                  p2pQuit(false)
-              }
+      } else {
+        msgIdSend += 1
+        msgMsSend = System.currentTimeMillis
+        val p2pCoreMsg = P2pCore.Message.newBuilder
+                                .setCommand(cmd)
+                                .setMsgLength(sendString.length)
+                                .setMsgString(sendString)
+                                .setMsgId(msgIdSend)
+                                .build
+        val size = p2pCoreMsg.getSerializedSize
+        //log("p2pSend p2pCoreMsg.getSerializedSize="+size)
+        if(size>0) {
+          val byteData = p2pCoreMsg.toByteArray
+          // if relayBasedP2pCommunication is set, use send(); else use p2pSocket.send()
+          if(host!=null && port!=0) {
+            //log("p2pSend udp '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
+            val sendDatagram = new DatagramPacket(byteData, size, new InetSocketAddress(host, port))
+            try {
+              p2pSocket.send(sendDatagram)
+              // todo: "java.io.IOException: Operation not permitted" ???
+            } catch {
+              case ex:java.io.IOException =>
+                // for instance: "ENETUNREACH (Network is unreachable)"
+                // retry...
+                log("p2pSend ex="+ex+" retry...")
+                try { Thread.sleep(700); } catch { case ex:Exception => }
+                // todo: retry may also throw
+                try {
+                  p2pSocket.send(sendDatagram)
+                } catch {
+                  case ex:java.io.IOException =>
+                    log("p2pSend retry failed ex="+ex)
+                    // todo: how to cope? 
+                    p2pQuit(false)
+                }
+            }
           }
         }
       }
@@ -246,43 +248,42 @@ class P2pBase extends RelayTrait {
       } else {
         p2pReceivePreHandler(str)  // -> p2pReceiveHandler()
       }
+      return
+    }
 
-    } else {
-      if(str.startsWith("udpAddress=")) {
-        // "udpAddress=..." is the only data we always receive from the other client via relay (unencoded/non-multiplexed format)
-        // because NO direct p2p-connection was established yet
-        val combindedUdpAddress = str.substring(11)
-        log("receiveMsgHandler other peer combindedUdpAddress=["+combindedUdpAddress+"]")
-        val tokenArrayOfStrings = combindedUdpAddress.trim split '|'
-        otherUdpAddrString = tokenArrayOfStrings(0)
-        if(otherUdpAddrString.length>0) {
-          // trying to udp-communicate with the other parties external ip:port
-          // todo: implement direct-p2p connect-timeout starting here and now
+    if(str.startsWith("udpAddress=")) {
+      // "udpAddress=..." is the only data we always receive from the other client via relay (unencoded/non-multiplexed format)
+      // because NO direct p2p-connection was established yet
+      val combindedUdpAddress = str.substring(11)
+      log("receiveMsgHandler other peer combindedUdpAddress=["+combindedUdpAddress+"]")
+      val tokenArrayOfStrings = combindedUdpAddress.trim split '|'
+      otherUdpAddrString = tokenArrayOfStrings(0)
+      if(otherUdpAddrString.length>0) {
+        // trying to udp-communicate with the other parties external ip:port
+        // todo: implement direct-p2p connect-timeout starting here and now
 
+        udpPunchAttempts +=1
+        new Thread("datagramSendPublic") { override def run() {
+          val tokenArrayOfStrings2 = otherUdpAddrString split ':'
+          datagramSendThread(tokenArrayOfStrings2(0),new java.lang.Integer(tokenArrayOfStrings2(1)).intValue)
+          // if the udp hole was punched, call p2pSendThread
+        } }.start
+
+        val localIpAddressString = tokenArrayOfStrings(1)
+        if(localIpAddressString.length>0) {
+          // try to udp-communicate with the other parties local ip:port
           udpPunchAttempts +=1
-          new Thread("datagramSendPublic") { override def run() {
-            val tokenArrayOfStrings2 = otherUdpAddrString split ':'
-            datagramSendThread(tokenArrayOfStrings2(0),new java.lang.Integer(tokenArrayOfStrings2(1)).intValue)
+          new Thread("datagramSendLocal") { override def run() { 
+            val tokenArrayOfStrings3 = localIpAddressString split ':'
+            datagramSendThread(tokenArrayOfStrings3(0),new java.lang.Integer(tokenArrayOfStrings3(1)).intValue)
             // if the udp hole was punched, call p2pSendThread
           } }.start
-
-          val localIpAddressString = tokenArrayOfStrings(1)
-          if(localIpAddressString.length>0) {
-            // try to udp-communicate with the other parties local ip:port
-            udpPunchAttempts +=1
-            new Thread("datagramSendLocal") { override def run() { 
-              val tokenArrayOfStrings3 = localIpAddressString split ':'
-              datagramSendThread(tokenArrayOfStrings3(0),new java.lang.Integer(tokenArrayOfStrings3(1)).intValue)
-              // if the udp hole was punched, call p2pSendThread
-            } }.start
-          }       
-        }
-        return
+        }       
       }
-
-      // in p2p mode, this is not being used: all data goes to p2pReceiveHandler (even if relayed as a fallback)
-      relayReceiveHandler(str)
     }
+
+    // in p2p mode, this is not being used: all data goes to p2pReceiveHandler (even if relayed as a fallback)
+    relayReceiveHandler(str)
   }
 
   def datagramSendThread(udpIpAddr:String, udpPortInt:Int) {
