@@ -66,12 +66,10 @@ class P2pBase extends RelayTrait {
       return
     } 
 
-/*
     if(relayBasedP2pCommunication) {
       send(sendString)
       return
     }
-*/
 
     //log("p2pSend '"+sendString+"' len="+sendString.length+" to="+host+":"+port)
     if(host==relayServer) {
@@ -82,46 +80,40 @@ class P2pBase extends RelayTrait {
 
     } else {
       // sending data to the other peer
-      if(relayBasedP2pCommunication) {
-        //log("p2pSend relayed '"+sendString+"'")
-        send(sendString)
-
-      } else {
-        msgIdSend += 1
-        msgMsSend = System.currentTimeMillis
-        val p2pCoreMsg = P2pCore.Message.newBuilder
-                                .setCommand(cmd)
-                                .setMsgLength(sendString.length)
-                                .setMsgString(sendString)
-                                .setMsgId(msgIdSend)
-                                .build
-        val size = p2pCoreMsg.getSerializedSize
-        //log("p2pSend p2pCoreMsg.getSerializedSize="+size)
-        if(size>0) {
-          val byteData = p2pCoreMsg.toByteArray
-          // if relayBasedP2pCommunication is set, use send(); else use p2pSocket.send()
-          if(host!=null && port!=0) {
-            //log("p2pSend udp '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
-            val sendDatagram = new DatagramPacket(byteData, size, new InetSocketAddress(host, port))
-            try {
-              p2pSocket.send(sendDatagram)
-              // todo: "java.io.IOException: Operation not permitted" ???
-            } catch {
-              case ex:java.io.IOException =>
-                // for instance: "ENETUNREACH (Network is unreachable)"
-                // retry...
-                log("p2pSend ex="+ex+" retry...")
-                try { Thread.sleep(700); } catch { case ex:Exception => }
-                // todo: retry may also throw
-                try {
-                  p2pSocket.send(sendDatagram)
-                } catch {
-                  case ex:java.io.IOException =>
-                    log("p2pSend retry failed ex="+ex)
-                    // todo: how to cope? 
-                    p2pQuit(false)
-                }
-            }
+      msgIdSend += 1
+      msgMsSend = System.currentTimeMillis
+      val p2pCoreMsg = P2pCore.Message.newBuilder
+                              .setCommand(cmd)
+                              .setMsgLength(sendString.length)
+                              .setMsgString(sendString)
+                              .setMsgId(msgIdSend)
+                              .build
+      val size = p2pCoreMsg.getSerializedSize
+      //log("p2pSend p2pCoreMsg.getSerializedSize="+size)
+      if(size>0) {
+        val byteData = p2pCoreMsg.toByteArray
+        // if relayBasedP2pCommunication is set, use send(); else use p2pSocket.send()
+        if(host!=null && port!=0) {
+          //log("p2pSend udp '"+sendString+"' len="+sendString.length+" to="+host+":"+port+" size="+size+" "+byteData.length)
+          val sendDatagram = new DatagramPacket(byteData, size, new InetSocketAddress(host, port))
+          try {
+            p2pSocket.send(sendDatagram)
+            // todo: "java.io.IOException: Operation not permitted" ???
+          } catch {
+            case ex:java.io.IOException =>
+              // for instance: "ENETUNREACH (Network is unreachable)"
+              // retry...
+              log("p2pSend ex="+ex+" retry...")
+              try { Thread.sleep(700); } catch { case ex:Exception => }
+              // todo: retry may also throw
+              try {
+                p2pSocket.send(sendDatagram)
+              } catch {
+                case ex:java.io.IOException =>
+                  log("p2pSend retry failed ex="+ex)
+                  // todo: how to cope? 
+                  p2pQuit(false)
+              }
           }
         }
       }
