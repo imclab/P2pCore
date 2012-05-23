@@ -222,12 +222,15 @@ class P2pBase extends RelayTrait {
     udpPunchFaults=0
 
     if(str=="relayBasedP2p=true") {
-      log("receiveMsgHandler 'relayBasedP2p=true' -> p2p via relay server ####")
-      publicUdpAddrString = myPublicIpAddr+":"+myPublicPort
-      otherUdpAddrString = otherPublicIpAddr+":"+otherPublicPort
-      log("receiveMsgHandler publicUdpAddrString="+publicUdpAddrString+" otherUdpAddrString="+otherUdpAddrString)
-      relayBasedP2pCommunication = true
-      p2pSendThread
+      // other client prefers relayed communication
+      log("receiveMsgHandler 'relayBasedP2p=true' ####")
+      if(relayBasedP2pCommunication==false) {
+        publicUdpAddrString = myPublicIpAddr+":"+myPublicPort
+        otherUdpAddrString = otherPublicIpAddr+":"+otherPublicPort
+        log("receiveMsgHandler publicUdpAddrString="+publicUdpAddrString+" otherUdpAddrString="+otherUdpAddrString)
+        relayBasedP2pCommunication = true
+        p2pSendThread
+      }
       return
     }
 
