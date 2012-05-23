@@ -33,6 +33,10 @@ trait RelayTrait {
   @volatile var socketOutWriter:BufferedWriter = null
   @volatile var socketInReader:BufferedReader = null
   @volatile var relayQuitFlag = false
+  @volatile var otherPublicIpAddr:String = null
+  @volatile var otherPublicPort = -1
+  @volatile var myPublicIpAddr:String = null
+  @volatile var myPublicPort = -1
   var hostPubKey:String = null
   var randomId = 0
   var clientId = ""
@@ -161,10 +165,18 @@ trait RelayTrait {
         verifyRelay
         // now wait for other client
 
-      } else if(commserverString.startsWith("connect=")) {    // may be better named "connected=..."
-        val connectString = commserverString.substring(8) 
+      } else if(commserverString.startsWith("connect=")) {    // may be better named "connected=..." ?
+        val connectString = commserverString.substring(8)
+        // format: userName|country|other-tcpAddr|other-port|my-tcpAddr|my-port"
         verifyRelay
         new Thread("senddata") { override def run() { 
+          val tokenArrayOfStrings = connectString split '|'
+          otherPublicIpAddr = tokenArrayOfStrings(2)
+          otherPublicPort = new java.lang.Integer(tokenArrayOfStrings(3)).intValue
+          //log("receiveHandler -> connectedThread otherPublicIpAddr='"+otherPublicIpAddr+"' otherPublicPort="+otherPublicPort)
+          myPublicIpAddr = tokenArrayOfStrings(4)
+          myPublicPort = new java.lang.Integer(tokenArrayOfStrings(5)).intValue
+          //log("receiveHandler -> connectedThread    myPublicIpAddr='"+myPublicIpAddr+"' myPublicPort="+myPublicPort)
           connectedThread(connectString) 
         } }.start
 

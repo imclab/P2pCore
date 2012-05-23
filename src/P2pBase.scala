@@ -131,18 +131,7 @@ class P2pBase extends RelayTrait {
   /** we are now p2p-connected via relay server (tcp) */
   override def connectedThread(connectString:String) {
 
-    /*
-      // this code could be used for TCP hole punching (but we don't know how to do this yet)
-      // parse connectString="username|null|92.201.15.122|42147" (username|county|ip|port)
-      //log("connectedThread connectString='"+connectString+"'")
-      val tokenArrayOfStrings = connectString split '|'
-      otherPublicIpAddr = tokenArrayOfStrings(2)
-      val otherPublicPort = new java.lang.Integer(tokenArrayOfStrings(3)).intValue
-      val myPublicIpAddr = tokenArrayOfStrings(4)
-      val myPublicPort = new java.lang.Integer(tokenArrayOfStrings(5)).intValue
-      log("connectedThread otherPublicIpAddr='"+otherPublicIpAddr+"' otherPublicPort="+otherPublicPort)
-      log("connectedThread    myPublicIpAddr='"+myPublicIpAddr+"' myPublicPort="+myPublicPort)
-    */
+    //log("connectedThread connectString='"+connectString+"'")
 
     // first get our own public/external udp-port from relay server's udp echo-service
     p2pSend("hello", relayServer, udpEchoPort)
@@ -232,8 +221,18 @@ class P2pBase extends RelayTrait {
     udpPunchAttempts=0
     udpPunchFaults=0
 
+    if(str=="relayBasedP2p=true") {
+      log("receiveMsgHandler 'relayBasedP2p=true' -> p2p via relay server ####")
+      publicUdpAddrString = myPublicIpAddr+":"+myPublicPort
+      otherUdpAddrString = otherPublicIpAddr+":"+otherPublicPort
+      log("receiveMsgHandler publicUdpAddrString="+publicUdpAddrString+" otherUdpAddrString="+otherUdpAddrString)
+      relayBasedP2pCommunication = true
+      p2pSendThread
+      return
+    }
+
     if(relayBasedP2pCommunication) {
-      //log("receiveMsgHandler relayBasedP2pCommunication str="+str+" ####")
+      log("receiveMsgHandler relayBasedP2pCommunication str="+str+" ####")
       // forward all receiveMsgHandler(str) to p2pReceivePreHandler(str)
       if(str.startsWith("udpAddress=")) {
         // ignore
@@ -359,8 +358,16 @@ class P2pBase extends RelayTrait {
 
   /** we receive data via (or from) the relay server */
   def relayReceiveHandler(str:String) {
-    // in p2p mode, this is not being used: all data goes to p2pReceiveHandler (even if relayed as a fallback)
-    // todo: true?
+    if(str.startsWith("start otr/smp")) {
+      log("relayReceiveHandler other client trying relayBasedP2pCommunication -> receiveMsgHandler")
+      // set publicUdpAddrString and otherUdpAddrString AS IF we are UDP connected
+      publicUdpAddrString = myPublicIpAddr+":"+myPublicPort
+      otherUdpAddrString = otherPublicIpAddr+":"+otherPublicPort
+      relayBasedP2pCommunication = true
+      receiveMsgHandler(str)
+      return
+    }
+
     log("relayReceiveHandler str='"+str+"' UNEXPECTED IN P2P MODE ###########")
   }
 
