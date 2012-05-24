@@ -223,7 +223,7 @@ class P2pBase extends RelayTrait {
 
     if(str=="relayBasedP2p=true") {
       // other client prefers relayed communication
-      log("receiveMsgHandler 'relayBasedP2p=true' ####")
+      log("receiveMsgHandler 'relayBasedP2p=true' relayBasedP2pCommunication="+relayBasedP2pCommunication+" ####")
       if(relayBasedP2pCommunication==false) {
         publicUdpAddrString = myPublicIpAddr+":"+myPublicPort
         otherUdpAddrString = otherPublicIpAddr+":"+otherPublicPort
@@ -235,7 +235,7 @@ class P2pBase extends RelayTrait {
     }
 
     if(relayBasedP2pCommunication) {
-      log("receiveMsgHandler relayBasedP2pCommunication str="+str+" ####")
+      //log("receiveMsgHandler relayBasedP2pCommunication str="+str+" ####")
       // forward all receiveMsgHandler(str) to p2pReceivePreHandler(str)
       if(str.startsWith("udpAddress=")) {
         // ignore
